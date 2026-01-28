@@ -1,18 +1,34 @@
-import { api } from "@/lib/api";
+import { api } from "@/lib/axios-api";
+
+export interface LoginResponse {
+  data: {
+    accessToken: string;
+    refreshToken: string;
+    otp: string | null;
+    roles: string[];
+    userId: number;
+  };
+  message: string;
+  status: boolean;
+  timeCreated: string;
+}
 
 export const AuthService = {
-  login(payload: { email: string; password: string }) {
-    return api<{
-      token: string;
+  async login(payload: { email: string; password: string }) {
+    const response = await api.post<LoginResponse>("/users/login", payload);
+    
+    // Return formatted data
+    return {
+      token: response.data.accessToken,
+      refreshToken: response.data.refreshToken,
       user: {
-        id: string;
-        email: string;
-        role: string;
-      };
-    }>("/users/login", {
-      method: "POST",
-      auth: false,
-      body: JSON.stringify(payload),
-    });
+        id: response.data.userId.toString(),
+        email: payload.email,
+        role: response.data.roles[0] || "USER",
+        roles: response.data.roles,
+      },
+    };
   },
+
+  // Rest of the methods...
 };

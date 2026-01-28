@@ -1,9 +1,11 @@
+// app/dashboard/layout.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import DashboardLayout from "@/app/components/layout/dashboard-layout";
 import { Loader2 } from "lucide-react";
+import DashboardLayout from "../components/dashboard/dashboard-layout";
+// import DashboardLayout from "@/components/dashboard/dashboard-layout";  // ← adjust path to where you saved the component
 
 interface DashboardUser {
   name: string;
@@ -18,50 +20,71 @@ export default function DashboardRootLayout({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<DashboardUser | null>(null);
+  const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
+
   const router = useRouter();
 
   useEffect(() => {
-    // Check authentication
-    const checkAuth = () => {
-      const token = localStorage.getItem("access_token");
-      const userData = localStorage.getItem("user");
+    const token = localStorage.getItem("access_token");
+    const storedUser = localStorage.getItem("user");
 
-      if (!token || !userData) {
-        router.push("/login");
-        return;
-      }
-
+    if (token && storedUser) {
       try {
-        const parsedUser = JSON.parse(userData);
-        setUser({
-          name: parsedUser.name || parsedUser.firstName + " " + parsedUser.lastName || "User",
-          email: parsedUser.email,
-          role: parsedUser.role || "Admin",
-          avatar: parsedUser.avatar
-        });
-      } catch (error) {
-        console.error("Error parsing user data:", error);
-        router.push("/login");
-      } finally {
-        setLoading(false);
-      }
-    };
+        const parsed = JSON.parse(storedUser);
 
-    checkAuth();
+        const fullName =
+          parsed.name ||
+          `${parsed.firstName || ""} ${parsed.lastName || ""}`.trim() ||
+          "User";
+
+        setUser({
+          name: fullName,
+          email: parsed.email || "unknown@example.com",
+          role: parsed.role || "User",
+          avatar: parsed.avatar,
+        });
+
+        setIsGuest(false);
+      } catch (err) {
+        console.error("Invalid user data in localStorage", err);
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user");
+      }
+    } else {
+      // Guest / preview mode
+      setUser({
+        name: "Guest Preview",
+        email: "preview@demo.app",
+        role: "Viewer",
+        avatar: undefined,
+      });
+      setIsGuest(true);
+      console.log("[Dashboard] Running in guest / preview mode");
+    }
+
+    setLoading(false);
   }, [router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-green-600" />
+          <p className="text-gray-500">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
 
+  // We always render — guest or logged-in
   if (!user) {
-    return null;
+    return null; // safety fallback (should not happen)
   }
 
-  return <DashboardLayout user={user}>{children}</DashboardLayout>;
+  return (
+    <DashboardLayout user={user} isGuest={isGuest}>
+      {children}
+    </DashboardLayout>
+  );
 }

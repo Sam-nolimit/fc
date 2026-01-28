@@ -1,20 +1,40 @@
 "use client";
 
-import { TrendingUp, Users, ShoppingBag, CreditCard } from "lucide-react";
+import { TrendingUp, Users, ShoppingBag, CreditCard, Download, Filter } from "lucide-react";
 import StatCard from "@/app/components/dashboard/stat-card";
 import ChartCard from "@/app/components/dashboard/chart-card";
 import RecentOrders from "@/app/components/dashboard/recent-orders";
 import { Button } from "@/app/components/ui/button";
-import { Download, Filter } from "lucide-react";
+import PieChart from "@/app/components/charts/piechart";
+import OrdersLineChart from "@/app/components/charts/orders-line-chart";
+// or use the simple version:
+// import SimpleLineChart from "@/app/components/charts/simple-line-chart";
 
 export default function DashboardPage() {
-  const weeklyData = [100, 200, 150, 300, 250, 400, 350];
+  // Orders data - matching typical order patterns
+//   const weeklyOrders = [250, 300, 200, 350, 280, 420, 380];
+  
+  // Product Categories Data for Pie Chart
   const categories = [
-    { name: "Veggies", value: 35, color: "bg-green-500" },
-    { name: "Dairy", value: 25, color: "bg-blue-500" },
-    { name: "Fruits", value: 20, color: "bg-orange-500" },
-    { name: "Livestock", value: 20, color: "bg-red-500" },
+    { name: "Veggies", value: 67, color: "#FEA821" }, 
+    { name: "Dairy", value: 27, color: "#002D00" },   
+    { name: "Fruits", value: 11, color: "#04792C" }, 
+    { name: "Livestock", value: 21, color: "#06C949" }, 
   ];
+
+  // Prepare data for pie chart
+  const pieChartData = {
+    labels: categories.map(cat => cat.name),
+    datasets: [
+      {
+        data: categories.map(cat => cat.value),
+        backgroundColor: categories.map(cat => cat.color),
+        borderColor: "#FFFFFF",
+        borderWidth: 2,
+        hoverOffset: 15,
+      },
+    ],
+  };
 
   return (
     <div className="space-y-6">
@@ -29,94 +49,89 @@ export default function DashboardPage() {
         <StatCard
           title="Total Sales"
           value="₦200,567.09"
-          icon={<CreditCard className="text-gray-600" size={24} />}
+          icon={<CreditCard className="text-green-600" size={20} />}
         />
         <StatCard
           title="Customers"
           value="45,609"
           change="+2.5%"
           trend="up"
-          icon={<Users className="text-gray-600" size={24} />}
+          icon={<Users className="text-blue-600" size={20} />}
         />
         <StatCard
           title="Farmers"
           value="1,609"
           change="-1.8%"
           trend="down"
-          icon={<Users className="text-gray-600" size={24} />}
+          icon={<Users className="text-orange-600" size={20} />}
         />
         <StatCard
           title="Total Orders"
           value="678"
-          change="+2.5% from yesterday"
+          change="+2.5%"
           trend="up"
-          icon={<ShoppingBag className="text-gray-600" size={24} />}
+          icon={<ShoppingBag className="text-purple-600" size={20} />}
         />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Orders Chart */}
+        {/* Orders Line Chart */}
         <ChartCard
           title="Orders"
-          action={
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm">
-                <Download size={16} className="mr-2" />
-                Export
-              </Button>
-              <Button variant="outline" size="sm">
-                <Filter size={16} />
-              </Button>
-            </div>
-          }
+      
         >
-          <div className="h-64">
-            <div className="flex items-end h-48 gap-1">
-              {weeklyData.map((value, index) => (
-                <div key={index} className="flex-1 flex flex-col items-center">
-                  <div
-                    className="w-full bg-green-500 rounded-t-lg"
-                    style={{ height: `${(value / 500) * 100}%` }}
-                  />
-                  <span className="text-xs text-gray-500 mt-2">
-                    {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][index]}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-between mt-4 text-sm text-gray-500">
-              <span>1k+</span>
-              <span>500</span>
-              <span>150</span>
-              <span>100</span>
-              <span>50</span>
-              <span>10</span>
-            </div>
+          <div className="h-72">
+            {/* Using Chart.js version */}
+            <OrdersLineChart 
+            //   data={weeklyOrders}
+            />
+            
+            {/* Or use the simple SVG version */}
+            {/* <SimpleLineChart 
+              data={weeklyOrders}
+              lineColor="#06C949"
+              fillColor="rgba(6, 201, 73, 0.1)"
+            /> */}
           </div>
         </ChartCard>
 
-        {/* Product Categories */}
+        {/* Product Categories with Pie Chart */}
         <ChartCard title="Product Categories">
-          <div className="space-y-4">
-            {categories.map((category) => (
-              <div key={category.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${category.color}`} />
-                  <span className="text-sm font-medium">{category.name}</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-32 bg-gray-200 rounded-full h-2">
-                    <div
-                      className={`h-2 rounded-full ${category.color}`}
-                      style={{ width: `${category.value}%` }}
-                    />
-                  </div>
-                  <span className="text-sm font-medium w-8">{category.value}%</span>
-                </div>
-              </div>
-            ))}
+          <div className="h-64">
+            <PieChart
+              data={pieChartData}
+              options={{
+                plugins: {
+                  legend: {
+                    position: 'right',
+                    labels: {
+                      usePointStyle: true,
+                      pointStyle: 'circle',
+                      padding: 20,
+                      font: {
+                        size: 12,
+                        weight: '500' as const,
+                      },
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: (context) => {
+                        const label = context.label || '';
+                        const value = context.parsed;
+                        const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+                        const percentage = Math.round((value / total) * 100);
+                        return `${label}: ${value}% (${percentage}% of total)`;
+                      },
+                    },
+                  },
+                },
+              }}
+            />
           </div>
+          
+        
         </ChartCard>
       </div>
 

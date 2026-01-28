@@ -48,12 +48,23 @@ export const Button = React.forwardRef<
           baseStyles,
           variants[variant],
           sizes[size],
+          "relative",
           className
         )}
         disabled={disabled || loading}
         {...props}
       >
-        {loading ? "Loading..." : children}
+        {loading && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className={cn(
+              "border-2 border-white border-t-transparent rounded-full animate-spin",
+              size === "sm" ? "w-4 h-4" : "w-5 h-5"
+            )} />
+          </div>
+        )}
+        <span className={loading ? "invisible" : "visible"}>
+          {children}
+        </span>
       </button>
     );
   }
