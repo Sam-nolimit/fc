@@ -6,6 +6,9 @@ import { Input } from "@/app/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+// import { AuthService } from "@/services/auth";
+import { AuthService } from "@/services/auth.service";
+
 
 export default function Register() {
   const router = useRouter();
@@ -16,8 +19,7 @@ export default function Register() {
     password: "",
     confirmPassword: "",
     phone: "",
-    businessName: "",
-    role: "farmer" // Default role
+    role: "admin" 
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,6 +47,10 @@ export default function Register() {
       setError("Email is required");
       return false;
     }
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
     if (!formData.password.trim()) {
       setError("Password is required");
       return false;
@@ -69,43 +75,44 @@ export default function Register() {
     setError("");
 
     try {
-      // Prepare registration data
-      const registrationData = {
+      // Call AuthService.register
+      const result = await AuthService.register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
         phone: formData.phone || undefined,
-        businessName: formData.businessName || undefined,
         role: formData.role
-      };
-
-      // Call your registration API endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/users/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(registrationData),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
+      // Handle admin registration (requires OTP verification)
+      if (formData.role.toLowerCase() === "admin") {
+        // Note: The AuthService will return OTP in the response for admin registration
+        setSuccess("Admin account created! Please check your email for OTP verification.");
+        
+        // Store temporary data for OTP verification page
+        if (typeof window !== "undefined") {
+          localStorage.setItem("temp_user_id", (result as any).user?.id || "");
+          localStorage.setItem("temp_email", formData.email);
+        }
+        
+        // Redirect to OTP verification after 2 seconds
+        setTimeout(() => {
+          router.push("/verify-otp");
+        }, 2000);
+      } else {
+        // Handle regular user registration
+        setSuccess("Account created successfully! Redirecting to login...");
+        
+        // Redirect to login after 2 seconds
+        setTimeout(() => {
+          router.push("/login");
+        }, 2000);
       }
 
-      // Show success message
-      setSuccess("Account created successfully! Redirecting to login...");
-      
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
-
     } catch (err: any) {
-      setError(err.message || "Registration failed. Please try again.");
       console.error("Registration error:", err);
+      setError(err.message || "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -209,46 +216,14 @@ export default function Register() {
               <Input
                 type="tel"
                 name="phone"
-                placeholder="+1 (234) 567-8900"
+                placeholder="0816 1596 789"
                 className="h-12 rounded-xl"
                 value={formData.phone}
                 onChange={handleChange}
               />
             </div>
 
-            {/* Business Name */}
-            <div className="text-left">
-              <label className="block text-sm font-medium mb-2">
-                Business Name (Optional)
-              </label>
-              <Input
-                type="text"
-                name="businessName"
-                placeholder="Your Farm or Business Name"
-                className="h-12 rounded-xl"
-                value={formData.businessName}
-                onChange={handleChange}
-              />
-            </div>
-
-            {/* Account Type */}
-            <div className="text-left">
-              <label className="block text-sm font-medium mb-2">
-                Account Type *
-              </label>
-              <select
-                name="role"
-                className="w-full h-12 rounded-xl border border-gray-300 px-4 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                value={formData.role}
-                onChange={handleChange}
-                required
-              >
-                <option value="farmer">Farmer / Producer</option>
-                <option value="buyer">Buyer / Retailer</option>
-                <option value="distributor">Distributor</option>
-                <option value="admin">Administrator</option>
-              </select>
-            </div>
+            
 
             {/* Passwords */}
             <div className="grid grid-cols-2 gap-4">
@@ -293,7 +268,15 @@ export default function Register() {
                 className="w-full h-12 rounded-full bg-green-700 hover:bg-green-800 text-white font-medium"
                 disabled={loading}
               >
-                {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    CREATING ACCOUNT...
+                  </span>
+                ) : "CREATE ACCOUNT"}
               </Button>
 
               <div className="text-center">

@@ -1,52 +1,50 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Image from "next/image";
-import { Search, Filter, Download, Eye, Trash2, MoreVertical } from "lucide-react";
+import { Search, Filter, Download, Eye, Trash2, MoreVertical, Truck } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
-import Link from "next/link";
 
-interface Farmer {
+interface LogisticsCompany {
   id: number;
-  fullName: string;
+  companyName: string;
   email: string;
   address: string;
   phoneNumber: string;
 }
 
-export default function FarmersPage() {
+export default function LogisticsPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [farmers] = useState<Farmer[]>([
-    { id: 1, fullName: "Chiljoke Okafor", email: "Chukwudi@gmail.com", address: "No.14 Idumagbo, Lagos", phoneNumber: "0803234xxxx" },
-    { id: 2, fullName: "Adaobi Nwosu", email: "Ikenna@gmail.com", address: "7 Olumo Rock Rd, Abeokuta", phoneNumber: "090987xxxx" },
-    { id: 3, fullName: "Tunde Adebayo", email: "Ebele@gmail.com", address: "12 Eko Bridge, Lagos", phoneNumber: "0706123xxxx" },
-    { id: 4, fullName: "Ifeoma Eze", email: "Ifeanyi@gmail.com", address: "23 Zuma Rock, Abuja", phoneNumber: "0812345xxxx" },
-    { id: 5, fullName: "Emeka Nwachukwu", email: "Obioma@gmail.com", address: "9 Aso Rock, Abuja", phoneNumber: "0903456xxxx" },
-    { id: 6, fullName: "Ngozi Uche", email: "Chinwe@gmail.com", address: "15 Lekki Conservation Centre, Lagos", phoneNumber: "0708901xxxx" },
-    { id: 7, fullName: "Chinedu Obi", email: "Nnamdi@gmail.com", address: "3 Yankari Game Reserve, Bauchi", phoneNumber: "0814567xxxx" },
-    { id: 8, fullName: "Amara Nnebe", email: "Somto@gmail.com", address: "10 Obudu Mountain Resort, Cross River", phoneNumber: "0905678xxxx" },
-    { id: 9, fullName: "Obinna Chukwu", email: "Kehinde@gmail.com", address: "20 Kainji National Park, Niger", phoneNumber: "0701789xxxx" },
-    { id: 10, fullName: "Zainab Bello", email: "Talwo@gmail.com", address: "5 Ogbunike Cave, Anambra", phoneNumber: "0816890xxxx" },
-  ]);
-  
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
   const menuRefs = useRef<(HTMLDivElement | null)[]>([]);
+  
+  const [logisticsCompanies] = useState<LogisticsCompany[]>([
+    { id: 1, companyName: "Chijioike Okafor", email: "Chukwudi@gmail.com", address: "No. 14 Idumagbo, Lagos", phoneNumber: "0803 234 xxxx" },
+    { id: 2, companyName: "Adaobi Nwosu", email: "Ikennia@gmail.com", address: "7 Olumo Rock Rd, Abeokuta", phoneNumber: "0909 876 xxxx" },
+    { id: 3, companyName: "Tunde Adebayo", email: "Ebele@gmail.com", address: "12 Eko Bridge, Lagos", phoneNumber: "0706 123 xxxx" },
+    { id: 4, companyName: "Ifeoma Eze", email: "Ifeanyi@gmail.com", address: "23 Zuma Rock, Abuja", phoneNumber: "0812 345 xxxx" },
+    { id: 5, companyName: "Emeka Nwachukwu", email: "Obioma@gmail.com", address: "9 Aso Rock, Abuja", phoneNumber: "0903 456 xxxx" },
+    { id: 6, companyName: "Ngazi Uche", email: "Chinwe@gmail.com", address: "15 Lekki Conservation Centre, Lagos", phoneNumber: "0708 901 xxxx" },
+    { id: 7, companyName: "Chinedu Obi", email: "Namadi@gmail.com", address: "3 Yankari Game Reserve, Bauchi", phoneNumber: "0814 567 xxxx" },
+    { id: 8, companyName: "Amara Nnebe", email: "Somto@gmail.com", address: "10 Obudu Mountain Resort, Cross River", phoneNumber: "0905 678 xxxx" },
+    { id: 9, companyName: "Obinna Chukwu", email: "Kehinde@gmail.com", address: "20 Kainji National Park, Niger", phoneNumber: "0701 789 xxxx" },
+    { id: 10, companyName: "Zainab Bello", email: "Talwo@gmail.com", address: "5 Ogbunike Cave, Anambra", phoneNumber: "0816 890 xxxx" },
+  ]);
 
-  const filteredFarmers = farmers.filter(farmer =>
-    farmer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    farmer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    farmer.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    farmer.phoneNumber.includes(searchTerm)
+  const filteredCompanies = logisticsCompanies.filter(company =>
+    company.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    company.phoneNumber.includes(searchTerm)
   );
 
-  const handleViewDetails = (farmer: Farmer) => {
-    console.log("View details:", farmer);
+  const handleViewDetails = (company: LogisticsCompany) => {
+    console.log("View details:", company);
     setActiveMenu(null);
     // Implement view details logic
   };
 
-  const handleDelete = (farmer: Farmer) => {
-    console.log("Delete:", farmer);
+  const handleDelete = (company: LogisticsCompany) => {
+    console.log("Delete:", company);
     setActiveMenu(null);
     // Implement delete logic
   };
@@ -79,11 +77,11 @@ export default function FarmersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Farmers</h1>
-          <p className="text-gray-600 mt-1">Manage all registered farmers</p>
+          <h1 className="text-2xl font-bold text-gray-900">Logistics</h1>
+          <p className="text-gray-600 mt-1">Manage logistics companies and partners</p>
         </div>
         <Button className="bg-green-600 hover:bg-green-700">
-          Add New Farmer
+          Add New Logistics
         </Button>
       </div>
 
@@ -96,7 +94,7 @@ export default function FarmersPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
               <input
                 type="text"
-                placeholder="Search farmers..."
+                placeholder="Search by company name, email, address, or phone number..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
@@ -118,14 +116,14 @@ export default function FarmersPage() {
         </div>
       </div>
 
-      {/* Farmers Table */}
+      {/* Logistics Companies Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-700 uppercase tracking-wider">
-                  Full name
+                  Company name
                 </th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-700 uppercase tracking-wider">
                   Email address
@@ -142,43 +140,41 @@ export default function FarmersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredFarmers.map((farmer, index) => (
-                <tr key={farmer.id} className="hover:bg-gray-50 transition-colors">
+              {filteredCompanies.map((company, index) => (
+                <tr key={company.id} className="hover:bg-gray-50 transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-700 font-medium text-sm">
-                          {farmer.fullName.split(' ').map(n => n[0]).join('')}
-                        </span>
+                      <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                        <Truck className="text-orange-600" size={16} />
                       </div>
-                      <span className="font-medium text-gray-900">{farmer.fullName}</span>
+                      <span className="font-medium text-gray-900">{company.companyName}</span>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-gray-600">{farmer.email}</td>
-                  <td className="py-4 px-6 text-gray-600">{farmer.address}</td>
-                  <td className="py-4 px-6 text-gray-600">{farmer.phoneNumber}</td>
+                  <td className="py-4 px-6 text-gray-600">{company.email}</td>
+                  <td className="py-4 px-6 text-gray-600">{company.address}</td>
+                  <td className="py-4 px-6 text-gray-600">{company.phoneNumber}</td>
                   <td className="py-4 px-6">
                     <div className="relative" ref={el => menuRefs.current[index] = el}>
                       <button
-                        onClick={() => toggleMenu(farmer.id)}
+                        onClick={() => toggleMenu(company.id)}
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <MoreVertical size={18} />
                       </button>
                       
                       {/* Dropdown Menu */}
-                      {activeMenu === farmer.id && (
+                      {activeMenu === company.id && (
                         <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                           <div className="py-1">
                             <button
-                              onClick={() => handleViewDetails(farmer)}
+                              onClick={() => handleViewDetails(company)}
                               className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                               <Eye size={16} />
                               <span>View Details</span>
                             </button>
                             <button
-                              onClick={() => handleDelete(farmer)}
+                              onClick={() => handleDelete(company)}
                               className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                             >
                               <Trash2 size={16} />
@@ -196,20 +192,20 @@ export default function FarmersPage() {
         </div>
 
         {/* Empty State */}
-        {filteredFarmers.length === 0 && (
+        {filteredCompanies.length === 0 && (
           <div className="py-12 text-center">
             <div className="text-gray-400 mb-3">
               <Search size={48} className="mx-auto" />
             </div>
-            <p className="text-gray-500">No farmers found matching your search.</p>
+            <p className="text-gray-500">No logistics companies found matching your search.</p>
           </div>
         )}
 
-        {/* Pagination (if needed) */}
+        {/* Pagination */}
         <div className="border-t border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-600">
-              Showing 1 to {filteredFarmers.length} of {farmers.length} farmers
+              Showing 1 to {filteredCompanies.length} of {logisticsCompanies.length} companies
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" disabled>

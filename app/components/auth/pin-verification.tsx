@@ -6,9 +6,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 interface PinVerificationProps {
-  email?: string;
+  email?: string | null;
   onVerify?: (pin: string) => void;
   onResend?: () => void;
+  isLoading?: boolean; //
   countdownDuration?: number; // in seconds
 }
 
@@ -16,7 +17,7 @@ export default function PinVerification({
   email = "johndemulee@gmail.com",
   onVerify,
   onResend,
-  countdownDuration = 300, // 5 minutes in seconds
+  countdownDuration = 300,
 }: PinVerificationProps) {
   const [pin, setPin] = useState<string[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(countdownDuration);

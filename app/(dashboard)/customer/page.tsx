@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Search, Filter, Download, Eye, Trash2, MoreVertical } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import Link from "next/link";
 
 interface Farmer {
   id: number;
@@ -27,6 +28,9 @@ export default function FarmersPage() {
     { id: 9, fullName: "Obinna Chukwu", email: "Kehinde@gmail.com", address: "20 Kainji National Park, Niger", phoneNumber: "0701789xxxx" },
     { id: 10, fullName: "Zainab Bello", email: "Talwo@gmail.com", address: "5 Ogbunike Cave, Anambra", phoneNumber: "0816890xxxx" },
   ]);
+  
+  const [activeMenu, setActiveMenu] = useState<number | null>(null);
+  const menuRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const filteredFarmers = farmers.filter(farmer =>
     farmer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -37,11 +41,13 @@ export default function FarmersPage() {
 
   const handleViewDetails = (farmer: Farmer) => {
     console.log("View details:", farmer);
+    setActiveMenu(null);
     // Implement view details logic
   };
 
   const handleDelete = (farmer: Farmer) => {
     console.log("Delete:", farmer);
+    setActiveMenu(null);
     // Implement delete logic
   };
 
@@ -49,6 +55,24 @@ export default function FarmersPage() {
     console.log("Export data");
     // Implement export logic
   };
+
+  const toggleMenu = (id: number) => {
+    setActiveMenu(activeMenu === id ? null : id);
+  };
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!menuRefs.current.some(ref => ref && ref.contains(event.target as Node))) {
+        setActiveMenu(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -118,7 +142,7 @@ export default function FarmersPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredFarmers.map((farmer) => (
+              {filteredFarmers.map((farmer, index) => (
                 <tr key={farmer.id} className="hover:bg-gray-50 transition-colors">
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
@@ -134,24 +158,35 @@ export default function FarmersPage() {
                   <td className="py-4 px-6 text-gray-600">{farmer.address}</td>
                   <td className="py-4 px-6 text-gray-600">{farmer.phoneNumber}</td>
                   <td className="py-4 px-6">
-                    <div className="flex items-center gap-2">
+                    <div className="relative" ref={el => menuRefs.current[index] = el}>
                       <button
-                        onClick={() => handleViewDetails(farmer)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="View Details"
+                        onClick={() => toggleMenu(farmer.id)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                       >
-                        <Eye size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(farmer)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                      <button className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
                         <MoreVertical size={18} />
                       </button>
+                      
+                      {/* Dropdown Menu */}
+                      {activeMenu === farmer.id && (
+                        <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                          <div className="py-1">
+                            <button
+                              onClick={() => handleViewDetails(farmer)}
+                              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              <Eye size={16} />
+                              <span>View Details</span>
+                            </button>
+                            <button
+                              onClick={() => handleDelete(farmer)}
+                              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 size={16} />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>
