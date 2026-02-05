@@ -2,7 +2,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import DashboardLayout from "../components/dashboard/dashboard-layout";
 
@@ -20,20 +19,19 @@ export default function DashboardRootLayout({
 }) {
   const [user, setUser] = useState<DashboardUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
     const storedUser = localStorage.getItem("user");
 
-    console.log("🔵 [DASHBOARD LAYOUT] Checking authentication...");
-    console.log("🔵 [DASHBOARD LAYOUT] Token:", token ? "✅ Present" : "❌ Missing");
-    console.log("🔵 [DASHBOARD LAYOUT] User data:", storedUser ? "✅ Present" : "❌ Missing");
+    console.log("🔵 [DASHBOARD LAYOUT] Loading user data...");
+    console.log(
+      "🔵 [DASHBOARD LAYOUT] User data:",
+      storedUser ? "✅ Present" : "❌ Missing",
+    );
 
-    // If no token or user data, redirect to login
-    if (!token || !storedUser) {
-      console.log("❌ [DASHBOARD LAYOUT] No authentication found, redirecting to login");
-      router.push("/login");
+    if (!storedUser) {
+      console.warn("⚠️ [DASHBOARD LAYOUT] No user data found");
+      setLoading(false);
       return;
     }
 
@@ -44,7 +42,7 @@ export default function DashboardRootLayout({
       const fullName =
         parsed.name ||
         `${parsed.firstName || ""} ${parsed.lastName || ""}`.trim() ||
-        parsed.email?.split("@")[0] || // Use email username as fallback
+        parsed.email?.split("@")[0] ||
         "User";
 
       setUser({
@@ -54,20 +52,16 @@ export default function DashboardRootLayout({
         avatar: parsed.avatar,
       });
 
-      console.log("✅ [DASHBOARD LAYOUT] User authenticated:", fullName);
-
+      console.log("✅ [DASHBOARD LAYOUT] User loaded:", fullName);
     } catch (err) {
-      console.error("❌ [DASHBOARD LAYOUT] Invalid user data in localStorage", err);
-      // Clear invalid data and redirect to login
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("refresh_token");
-      router.push("/login");
-      return;
+      console.error(
+        "❌ [DASHBOARD LAYOUT] Invalid user data in localStorage",
+        err,
+      );
     }
 
     setLoading(false);
-  }, [router]);
+  }, []);
 
   if (loading) {
     return (
@@ -80,12 +74,11 @@ export default function DashboardRootLayout({
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
-    <DashboardLayout user={user} isGuest={false}>
+    <DashboardLayout
+      user={user || { name: "User", email: "", role: "User" }}
+      isGuest={!user}
+    >
       {children}
     </DashboardLayout>
   );

@@ -66,59 +66,6 @@ export default function Register() {
     return true;
   };
 
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-    
-  //   if (!validateForm()) return;
-    
-  //   setLoading(true);
-  //   setError("");
-
-  //   try {
-  //     // Call AuthService.register
-  //     const result = await AuthService.register({
-  //       firstName: formData.firstName,
-  //       lastName: formData.lastName,
-  //       email: formData.email,
-  //       password: formData.password,
-  //       phone: formData.phone || undefined,
-  //       role: formData.role
-  //     });
-
-  //     // Handle admin registration (requires OTP verification)
-  //     if (formData.role.toLowerCase() === "admin") {
-  //       // Note: The AuthService will return OTP in the response for admin registration
-  //       setSuccess("Admin account created! Please check your email for OTP verification.");
-        
-  //       // Store temporary data for OTP verification page
-  //       if (typeof window !== "undefined") {
-  //         localStorage.setItem("temp_user_id", (result as any).user?.id || "");
-  //         localStorage.setItem("temp_email", formData.email);
-  //       }
-        
-  //       // Redirect to OTP verification after 2 seconds
-  //       setTimeout(() => {
-  //         router.push("/verify-otp");
-  //       }, 2000);
-  //     } else {
-  //       // Handle regular user registration
-  //       setSuccess("Account created successfully! Redirecting to login...");
-        
-  //       // Redirect to login after 2 seconds
-  //       setTimeout(() => {
-  //         router.push("/login");
-  //       }, 2000);
-  //     }
-
-  //   } catch (err: any) {
-  //     console.error("Registration error:", err);
-  //     setError(err.message || "Registration failed. Please try again.");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // In your Register component
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   
@@ -137,14 +84,12 @@ const handleSubmit = async (e: React.FormEvent) => {
       role: formData.role
     });
 
-    console.log("Registration result:", result); // Debug log
+    console.log("Registration result:", result); 
 
     if (formData.role.toLowerCase() === "admin") {
       setSuccess("Admin account created! Please check your email for OTP verification.");
       
-      // Store tokens and user data from registration response
       if (typeof window !== "undefined") {
-        // Store tokens if available
         if (result.token) {
           localStorage.setItem("access_token", result.token);
           console.log("Access token stored:", result.token);
@@ -155,15 +100,13 @@ const handleSubmit = async (e: React.FormEvent) => {
           console.log("Refresh token stored:", result.refreshToken);
         }
         
-        // Store user data
         if (result.user) {
           localStorage.setItem("user", JSON.stringify(result.user));
           console.log("User data stored:", result.user);
         }
         
-        // Store temporary data for OTP verification
         localStorage.setItem("temp_email", formData.email);
-        localStorage.setItem("temp_password", formData.password); // Store password for auto-login
+        localStorage.setItem("temp_password", formData.password); 
         
         if (result.user?.id) {
           localStorage.setItem("temp_user_id", result.user.id);
@@ -214,7 +157,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         </Link>
       </header>
 
-      {/* Create Account Form */}
       <main className="flex flex-1 items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
@@ -224,14 +166,12 @@ const handleSubmit = async (e: React.FormEvent) => {
             </p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
               {error}
             </div>
           )}
 
-          {/* Success Message */}
           {success && (
             <div className="mb-4 p-3 bg-green-50 text-green-600 rounded-lg text-sm">
               {success}
@@ -239,7 +179,6 @@ const handleSubmit = async (e: React.FormEvent) => {
           )}
 
           <form className="space-y-4" onSubmit={handleSubmit}>
-            {/* Two-column layout for name */}
             <div className="grid grid-cols-2 gap-4">
               <div className="text-left">
                 <label className="block text-sm font-medium mb-2">
@@ -271,7 +210,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               </div>
             </div>
 
-            {/* Email */}
             <div className="text-left">
               <label className="block text-sm font-medium mb-2">
                 Email Address *
@@ -287,7 +225,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               />
             </div>
 
-            {/* Phone */}
             <div className="text-left">
               <label className="block text-sm font-medium mb-2">
                 Phone Number
@@ -304,7 +241,6 @@ const handleSubmit = async (e: React.FormEvent) => {
 
             
 
-            {/* Passwords */}
             <div className="grid grid-cols-2 gap-4">
               <div className="text-left">
                 <label className="block text-sm font-medium mb-2">
@@ -340,7 +276,6 @@ const handleSubmit = async (e: React.FormEvent) => {
               Password must be at least 6 characters long
             </p>
 
-            {/* Buttons */}
             <div className="pt-6 space-y-4">
               <Button
                 type="submit"
@@ -369,7 +304,6 @@ const handleSubmit = async (e: React.FormEvent) => {
             </div>
           </form>
 
-          {/* Terms and Conditions */}
           <div className="mt-8 pt-6 border-t text-center">
             <p className="text-xs text-gray-500">
               By creating an account, you agree to our{" "}

@@ -36,6 +36,10 @@ export default function LoginPage() {
       });
 
       if (response.token) {
+        // Set token in cookie (for middleware auth)
+        document.cookie = `access_token=${response.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
+
+        // Also keep in localStorage for UI purposes
         localStorage.setItem("access_token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
 
@@ -73,7 +77,6 @@ export default function LoginPage() {
             Enter your login email and password to access your account
           </p>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">
               {error}
@@ -81,7 +84,6 @@ export default function LoginPage() {
           )}
 
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Email */}
             <div className="text-left">
               <label className="block text-sm font-medium mb-2">
                 Email Address
@@ -97,7 +99,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password */}
             <div className="text-left">
               <label className="block text-sm font-medium mb-2">Password</label>
               <Input
@@ -111,7 +112,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Button */}
             <Button
               type="submit"
               className="w-full h-12 rounded-full bg-green-700 hover:bg-green-800 text-white font-medium"
