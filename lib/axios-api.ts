@@ -2,7 +2,6 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
-// Create axios instance
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -10,7 +9,6 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
     if (typeof window !== "undefined") {
@@ -26,41 +24,41 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
-    // Your API returns data in a specific structure
-    if (response.data && typeof response.data === "object") {
-      // For login endpoint, return full response
-      if (response.config.url?.includes("/login")) {
+    if (response.status === 201 || response.status === 200) {
+      if (response.data && typeof response.data === "object") {
+        if (response.config.url?.includes("/login")) {
+          return response.data;
+        }
+        if ("data" in response.data) {
+          return response.data.data;
+        }
         return response.data;
       }
-      // For other endpoints, return data.data if exists
-      if ("data" in response.data) {
-        return response.data.data;
-      }
+      return response.data;
     }
-    return response.data;
+    
+    return Promise.reject(response);
   },
   (error) => {
-    // Handle errors
     if (error.response) {
-      // The request was made and the server responded with a status code
+      if (error.response.status === 201) {
+        return Promise.resolve(error.response.data);
+      }
+      
       const errorMessage = error.response.data?.message || 
                           error.response.data?.error || 
                           "Request failed";
       return Promise.reject(new Error(errorMessage));
     } else if (error.request) {
-      // The request was made but no response was received
       return Promise.reject(new Error("Network error. Please check your connection."));
     } else {
-      // Something happened in setting up the request
       return Promise.reject(error);
     }
   }
 );
 
-// API helper functions
 export const api = {
   get: <T>(url: string, config?: AxiosRequestConfig): Promise<T> =>
     apiClient.get<T>(url, config).then((res) => res as T),

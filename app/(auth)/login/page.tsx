@@ -6,21 +6,20 @@ import { Input } from "@/app/components/ui/input";
 import Image from "next/image";
 import Link from "next/link";
 import { AuthService } from "@/services/auth.service";
-// import { AuthService } from "@/services/auth"; // Adjust import path as needed
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
-    password: ""
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     setError("");
   };
@@ -33,14 +32,13 @@ export default function LoginPage() {
     try {
       const response = await AuthService.login({
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
 
       if (response.token) {
         localStorage.setItem("access_token", response.token);
         localStorage.setItem("user", JSON.stringify(response.user));
-        
-        // Redirect based on user role (optional)
+
         if (response.user.role === "admin") {
           window.location.href = "/admin/dashboard";
         } else {
@@ -57,7 +55,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Logo */}
       <header className="p-6">
         <div className="flex items-center gap-2">
           <Image
@@ -69,7 +66,6 @@ export default function LoginPage() {
         </div>
       </header>
 
-      {/* Centered Login Card */}
       <main className="flex flex-1 items-center justify-center">
         <div className="w-full max-w-sm text-center">
           <h1 className="text-2xl font-semibold mb-2">Welcome Admin</h1>
@@ -103,9 +99,7 @@ export default function LoginPage() {
 
             {/* Password */}
             <div className="text-left">
-              <label className="block text-sm font-medium mb-2">
-                Password
-              </label>
+              <label className="block text-sm font-medium mb-2">Password</label>
               <Input
                 type="password"
                 name="password"

@@ -4,12 +4,13 @@ import { useState, useRef, useEffect, KeyboardEvent } from "react";
 import { Button } from "@/app/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface PinVerificationProps {
   email?: string | null;
   onVerify?: (pin: string) => void;
   onResend?: () => void;
-  isLoading?: boolean; //
+  isLoading?: boolean; // Fixed: Add this prop
   countdownDuration?: number; // in seconds
 }
 
@@ -17,21 +18,20 @@ export default function PinVerification({
   email = "johndemulee@gmail.com",
   onVerify,
   onResend,
-  countdownDuration = 300,
+  isLoading = false, // Fixed: Add this with default value
+  countdownDuration = 60,
 }: PinVerificationProps) {
   const [pin, setPin] = useState<string[]>(["", "", "", "", "", ""]);
   const [timeLeft, setTimeLeft] = useState(countdownDuration);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Countdown timer
   useEffect(() => {
     if (timeLeft <= 0) return;
 
@@ -48,40 +48,34 @@ export default function PinVerification({
     return () => clearInterval(timerId);
   }, [timeLeft]);
 
-  // Auto-focus first input on mount
   useEffect(() => {
     inputRefs.current[0]?.focus();
   }, []);
 
   const handleChange = (index: number, value: string) => {
-    // Only allow numbers
     if (value && !/^\d+$/.test(value)) return;
 
     const newPin = [...pin];
     newPin[index] = value.slice(-1); // Take only the last character
     setPin(newPin);
 
-    // Auto-focus next input if value entered
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // If all digits are filled, auto-submit
-    if (newPin.every(digit => digit !== "") && index === 5) {
+    if (newPin.every((digit) => digit !== "") && index === 5) {
       handleSubmit();
     }
   };
 
   const handleKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace") {
-      // If current input is empty, focus previous input
       if (!pin[index] && index > 0) {
         const newPin = [...pin];
         newPin[index - 1] = "";
         setPin(newPin);
         inputRefs.current[index - 1]?.focus();
       } else if (pin[index]) {
-        // Clear current input
         const newPin = [...pin];
         newPin[index] = "";
         setPin(newPin);
@@ -106,7 +100,6 @@ export default function PinVerification({
     });
     setPin(newPin);
 
-    // Focus the last filled input or the last input
     const lastFilledIndex = numbers.length - 1;
     const focusIndex = Math.min(lastFilledIndex, 5);
     inputRefs.current[focusIndex]?.focus();
@@ -134,14 +127,14 @@ export default function PinVerification({
     }
   };
 
-  const isPinComplete = pin.every(digit => digit !== "");
+  const isPinComplete = pin.every((digit) => digit !== "");
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header with Back Button */}
       <header className="p-6">
         <Link
-          href="/login"
+          href="/signup"
           className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft size={20} />
@@ -153,11 +146,13 @@ export default function PinVerification({
       <main className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md text-center">
           {/* Logo */}
-          <div className="mb-8">
-            <div className="w-16 h-16 bg-green-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-              <span className="text-white text-2xl font-bold">F</span>
-            </div>
-            <h1 className="text-2xl font-bold text-gray-900">Farm City</h1>
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <Image
+              src="/images/farmcitylogo.svg"
+              alt="Farm City"
+              width={188}
+              height={188}
+            />
           </div>
 
           {/* Title */}
@@ -219,14 +214,40 @@ export default function PinVerification({
             </div>
           </div>
 
-          {/* Verify Button */}
+          {/* Verify Button - Fixed: Use isLoading instead of isVerifying */}
           <Button
             onClick={handleSubmit}
-            disabled={!isPinComplete}
+            disabled={!isPinComplete || isLoading}
             className="w-full h-12 rounded-full bg-green-700 hover:bg-green-800 text-white font-medium"
             size="lg"
           >
-            VERIFY EMAIL
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                VERIFYING...
+              </span>
+            ) : (
+              "VERIFY EMAIL"
+            )}
           </Button>
         </div>
       </main>

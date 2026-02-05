@@ -158,7 +158,7 @@ export const AuthService = {
       message: string;
       status: boolean;
       timeCreated: string;
-    }>("/admins/verify-otp", {
+    }>("/users/verify-otp", {
       method: "POST",
       auth: false,
       body: JSON.stringify({ userId, otp }),

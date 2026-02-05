@@ -66,61 +66,140 @@ export default function Register() {
     return true;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
     
-    if (!validateForm()) return;
+  //   if (!validateForm()) return;
     
-    setLoading(true);
-    setError("");
+  //   setLoading(true);
+  //   setError("");
 
-    try {
-      // Call AuthService.register
-      const result = await AuthService.register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone || undefined,
-        role: formData.role
-      });
+  //   try {
+  //     // Call AuthService.register
+  //     const result = await AuthService.register({
+  //       firstName: formData.firstName,
+  //       lastName: formData.lastName,
+  //       email: formData.email,
+  //       password: formData.password,
+  //       phone: formData.phone || undefined,
+  //       role: formData.role
+  //     });
 
-      // Handle admin registration (requires OTP verification)
-      if (formData.role.toLowerCase() === "admin") {
-        // Note: The AuthService will return OTP in the response for admin registration
-        setSuccess("Admin account created! Please check your email for OTP verification.");
+  //     // Handle admin registration (requires OTP verification)
+  //     if (formData.role.toLowerCase() === "admin") {
+  //       // Note: The AuthService will return OTP in the response for admin registration
+  //       setSuccess("Admin account created! Please check your email for OTP verification.");
         
-        // Store temporary data for OTP verification page
-        if (typeof window !== "undefined") {
-          localStorage.setItem("temp_user_id", (result as any).user?.id || "");
-          localStorage.setItem("temp_email", formData.email);
+  //       // Store temporary data for OTP verification page
+  //       if (typeof window !== "undefined") {
+  //         localStorage.setItem("temp_user_id", (result as any).user?.id || "");
+  //         localStorage.setItem("temp_email", formData.email);
+  //       }
+        
+  //       // Redirect to OTP verification after 2 seconds
+  //       setTimeout(() => {
+  //         router.push("/verify-otp");
+  //       }, 2000);
+  //     } else {
+  //       // Handle regular user registration
+  //       setSuccess("Account created successfully! Redirecting to login...");
+        
+  //       // Redirect to login after 2 seconds
+  //       setTimeout(() => {
+  //         router.push("/login");
+  //       }, 2000);
+  //     }
+
+  //   } catch (err: any) {
+  //     console.error("Registration error:", err);
+  //     setError(err.message || "Registration failed. Please try again.");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  // In your Register component
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!validateForm()) return;
+  
+  setLoading(true);
+  setError("");
+
+  try {
+    const result = await AuthService.register({
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+      password: formData.password,
+      phone: formData.phone || undefined,
+      role: formData.role
+    });
+
+    console.log("Registration result:", result); // Debug log
+
+    if (formData.role.toLowerCase() === "admin") {
+      setSuccess("Admin account created! Please check your email for OTP verification.");
+      
+      // Store tokens and user data from registration response
+      if (typeof window !== "undefined") {
+        // Store tokens if available
+        if (result.token) {
+          localStorage.setItem("access_token", result.token);
+          console.log("Access token stored:", result.token);
         }
         
-        // Redirect to OTP verification after 2 seconds
-        setTimeout(() => {
-          router.push("/verify-otp");
-        }, 2000);
-      } else {
-        // Handle regular user registration
-        setSuccess("Account created successfully! Redirecting to login...");
+        if (result.refreshToken) {
+          localStorage.setItem("refresh_token", result.refreshToken);
+          console.log("Refresh token stored:", result.refreshToken);
+        }
         
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          router.push("/login");
-        }, 2000);
+        // Store user data
+        if (result.user) {
+          localStorage.setItem("user", JSON.stringify(result.user));
+          console.log("User data stored:", result.user);
+        }
+        
+        // Store temporary data for OTP verification
+        localStorage.setItem("temp_email", formData.email);
+        localStorage.setItem("temp_password", formData.password); // Store password for auto-login
+        
+        if (result.user?.id) {
+          localStorage.setItem("temp_user_id", result.user.id);
+        }
       }
-
-    } catch (err: any) {
-      console.error("Registration error:", err);
-      setError(err.message || "Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
+      
+      setTimeout(() => {
+        router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
+      }, 2000);
+    } else {
+      setSuccess("Account created successfully! Redirecting to login...");
+      
+      if (typeof window !== "undefined" && result.token) {
+        localStorage.setItem("access_token", result.token);
+        if (result.refreshToken) {
+          localStorage.setItem("refresh_token", result.refreshToken);
+        }
+        if (result.user) {
+          localStorage.setItem("user", JSON.stringify(result.user));
+        }
+      }
+      
+      setTimeout(() => {
+        router.push("/login");
+      }, 2000);
     }
-  };
 
+  } catch (err: any) {
+    console.error("Registration error:", err);
+    setError(err.message || "Registration failed. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Logo and Back Button */}
       <header className="p-6 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Image

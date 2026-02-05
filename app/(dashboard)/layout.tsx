@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import DashboardLayout from "../components/dashboard/dashboard-layout";
-// import DashboardLayout from "@/components/dashboard/dashboard-layout";  // ← adjust path to where you saved the component
 
 interface DashboardUser {
   name: string;
@@ -20,47 +19,51 @@ export default function DashboardRootLayout({
   children: React.ReactNode;
 }) {
   const [user, setUser] = useState<DashboardUser | null>(null);
-  const [isGuest, setIsGuest] = useState(false);
   const [loading, setLoading] = useState(true);
-
   const router = useRouter();
 
   useEffect(() => {
     const token = localStorage.getItem("access_token");
     const storedUser = localStorage.getItem("user");
 
-    if (token && storedUser) {
-      try {
-        const parsed = JSON.parse(storedUser);
+    console.log("🔵 [DASHBOARD LAYOUT] Checking authentication...");
+    console.log("🔵 [DASHBOARD LAYOUT] Token:", token ? "✅ Present" : "❌ Missing");
+    console.log("🔵 [DASHBOARD LAYOUT] User data:", storedUser ? "✅ Present" : "❌ Missing");
 
-        const fullName =
-          parsed.name ||
-          `${parsed.firstName || ""} ${parsed.lastName || ""}`.trim() ||
-          "User";
+    // If no token or user data, redirect to login
+    if (!token || !storedUser) {
+      console.log("❌ [DASHBOARD LAYOUT] No authentication found, redirecting to login");
+      router.push("/login");
+      return;
+    }
 
-        setUser({
-          name: fullName,
-          email: parsed.email || "unknown@example.com",
-          role: parsed.role || "User",
-          avatar: parsed.avatar,
-        });
+    try {
+      const parsed = JSON.parse(storedUser);
+      console.log("🔵 [DASHBOARD LAYOUT] Parsed user data:", parsed);
 
-        setIsGuest(false);
-      } catch (err) {
-        console.error("Invalid user data in localStorage", err);
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("user");
-      }
-    } else {
-      // Guest / preview mode
+      const fullName =
+        parsed.name ||
+        `${parsed.firstName || ""} ${parsed.lastName || ""}`.trim() ||
+        parsed.email?.split("@")[0] || // Use email username as fallback
+        "User";
+
       setUser({
-        name: "Guest Preview",
-        email: "preview@demo.app",
-        role: "Viewer",
-        avatar: undefined,
+        name: fullName,
+        email: parsed.email || "unknown@example.com",
+        role: parsed.role || "User",
+        avatar: parsed.avatar,
       });
-      setIsGuest(true);
-      console.log("[Dashboard] Running in guest / preview mode");
+
+      console.log("✅ [DASHBOARD LAYOUT] User authenticated:", fullName);
+
+    } catch (err) {
+      console.error("❌ [DASHBOARD LAYOUT] Invalid user data in localStorage", err);
+      // Clear invalid data and redirect to login
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      localStorage.removeItem("refresh_token");
+      router.push("/login");
+      return;
     }
 
     setLoading(false);
@@ -77,13 +80,12 @@ export default function DashboardRootLayout({
     );
   }
 
-  // We always render — guest or logged-in
   if (!user) {
-    return null; // safety fallback (should not happen)
+    return null;
   }
 
   return (
-    <DashboardLayout user={user} isGuest={isGuest}>
+    <DashboardLayout user={user} isGuest={false}>
       {children}
     </DashboardLayout>
   );
