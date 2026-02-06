@@ -114,7 +114,6 @@ export const AuthService = {
         body: JSON.stringify(registrationPayload),
       });
 
-      // For admin registration that returns OTP
       return {
         message: response.message,
         user: {
@@ -134,7 +133,6 @@ export const AuthService = {
         body: JSON.stringify(registrationPayload),
       });
 
-      // For regular user registration
       return {
         message: response.message,
         user: {
@@ -241,7 +239,6 @@ export const AuthService = {
   },
 
   logout() {
-    // Clear all auth-related items from localStorage
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
@@ -249,7 +246,6 @@ export const AuthService = {
     localStorage.removeItem("temp_email");
     localStorage.removeItem("temp_user_id");
     
-    // Optional: Clear sessionStorage as well
     sessionStorage.clear();
   },
 
