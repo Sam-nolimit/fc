@@ -154,9 +154,7 @@ export default function FarmersPage() {
           <h1 className="text-2xl font-bold text-gray-900">Farmers</h1>
           <p className="text-gray-600 mt-1">Manage all registered farmers</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700">
-          Add New Farmer
-        </Button>
+       
       </div>
 
       {/* Search and Filters Section */}
@@ -179,17 +177,6 @@ export default function FarmersPage() {
             </div>
           </div>
 
-          {/* Filter and Export Buttons */}
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="gap-2">
-              <Filter size={18} />
-              Filters
-            </Button>
-            <Button variant="outline" className="gap-2" onClick={handleExport}>
-              <Download size={18} />
-              Export
-            </Button>
-          </div>
         </div>
       </div>
 

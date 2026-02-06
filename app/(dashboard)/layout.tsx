@@ -23,21 +23,18 @@ export default function DashboardRootLayout({
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
 
-    console.log("🔵 [DASHBOARD LAYOUT] Loading user data...");
     console.log(
       "🔵 [DASHBOARD LAYOUT] User data:",
       storedUser ? "✅ Present" : "❌ Missing",
     );
 
     if (!storedUser) {
-      console.warn("⚠️ [DASHBOARD LAYOUT] No user data found");
       setLoading(false);
       return;
     }
 
     try {
       const parsed = JSON.parse(storedUser);
-      console.log("🔵 [DASHBOARD LAYOUT] Parsed user data:", parsed);
 
       const fullName =
         parsed.name ||
@@ -52,7 +49,6 @@ export default function DashboardRootLayout({
         avatar: parsed.avatar,
       });
 
-      console.log("✅ [DASHBOARD LAYOUT] User loaded:", fullName);
     } catch (err) {
       console.error(
         "❌ [DASHBOARD LAYOUT] Invalid user data in localStorage",

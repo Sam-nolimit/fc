@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   X,
   ChevronLeft,
   Check,
   Search,
 } from "lucide-react";
+import { FarmService } from "@/services/farmer.service";
+import { CategoryService } from "@/services/category.service";
+import { ProductService } from "@/services/product.service";
 
-type ModalStep = 'main' | 'selectUnit' | 'preview' | 'success';
+type ModalStep = 'main' | 'selectFarm' | 'selectCategory' | 'selectProduct' | 'selectUnit' | 'preview' | 'success';
 
 const unitCategories = [
   {
@@ -41,56 +44,30 @@ const unitCategories = [
   }
 ];
 
-const availableItems = [
-  {
-    id: 1,
-    name: "Fresh Tomatoes",
-    description: "Grown with care by our dedicated farmers, these tomatoes are plucked...",
-    image: "https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=100",
-  },
-  {
-    id: 2,
-    name: "Sweet Corn",
-    description: "Fresh sweet corn harvested at peak ripeness for maximum sweetness...",
-    image: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=100",
-  },
-  {
-    id: 3,
-    name: "Green Bell Peppers",
-    description: "Crisp and fresh bell peppers perfect for salads and cooking...",
-    image: "https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=100",
-  },
-  {
-    id: 4,
-    name: "Fresh Carrots",
-    description: "Crunchy organic carrots rich in vitamins and natural sweetness...",
-    image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=100",
-  },
-  {
-    id: 5,
-    name: "Red Onions",
-    description: "Premium red onions with a mild, sweet flavor ideal for any dish...",
-    image: "https://images.unsplash.com/photo-1508747703725-719777637510?w=100",
-  },
-  {
-    id: 6,
-    name: "Fresh Spinach",
-    description: "Tender leafy greens packed with nutrients and fresh flavor...",
-    image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=100",
-  },
-  {
-    id: 7,
-    name: "Cucumbers",
-    description: "Crisp and refreshing cucumbers perfect for salads and snacking...",
-    image: "https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=100",
-  },
-  {
-    id: 8,
-    name: "Fresh Broccoli",
-    description: "Nutrient-rich broccoli florets harvested at their freshest...",
-    image: "https://images.unsplash.com/photo-1628773822503-930a7eaecf80?w=100",
-  },
-];
+interface Farm {
+  id: number;
+  name: string;
+}
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  stockQuantity: number;
+  unit: string;
+  categoryId: number;
+  categoryName: string;
+  farmId: number;
+  farmName: string;
+  productGalleryId: number;
+}
 
 interface AddItemModalProps {
   isOpen: boolean;
@@ -100,26 +77,95 @@ interface AddItemModalProps {
 export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
   const [modalStep, setModalStep] = useState<ModalStep>('main');
   const [formData, setFormData] = useState({
-    category: "",
-    product: "",
+    farmId: "",
+    farmName: "",
+    categoryId: "",
+    categoryName: "",
+    productId: "",
+    productName: "",
+    productDescription: "",
+    productImageUrl: "",
+    productPrice: "",
+    productGalleryId: "",
     unit: "",
     quantity: "",
-    amount: ""
+    price: ""
   });
-  const [showProductDropdown, setShowProductDropdown] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const productDropdownRef = useRef<HTMLDivElement>(null);
+  const [farms, setFarms] = useState<Farm[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState({
+    farms: false,
+    categories: false,
+    products: false,
+    submitting: false
+  });
+  const [searchQuery, setSearchQuery] = useState({
+    farm: "",
+    category: "",
+    product: "",
+    unit: ""
+  });
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (productDropdownRef.current && !productDropdownRef.current.contains(event.target as Node)) {
-        setShowProductDropdown(false);
-      }
-    };
+    if (isOpen) {
+      fetchFarms();
+      fetchCategories();
+    }
+  }, [isOpen]);
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  useEffect(() => {
+    if (formData.categoryId) {
+      fetchProductsByCategory();
+    }
+  }, [formData.categoryId]);
+
+  const fetchFarms = async () => {
+    setLoading(prev => ({ ...prev, farms: true }));
+    try {
+      const response = await FarmService.getAllFarms({ limit: 50 });
+      if (response.status && response.data) {
+        setFarms(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching farms:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, farms: false }));
+    }
+  };
+
+  const fetchCategories = async () => {
+    setLoading(prev => ({ ...prev, categories: true }));
+    try {
+      const response = await CategoryService.getAllCategoriesList();
+      if (response.status && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, categories: false }));
+    }
+  };
+
+  const fetchProductsByCategory = async () => {
+    if (!formData.categoryId) return;
+    
+    setLoading(prev => ({ ...prev, products: true }));
+    try {
+      const response = await ProductService.getAllProducts({
+        categoryId: parseInt(formData.categoryId),
+        limit: 50
+      });
+      if (response.status && response.data) {
+        setProducts(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    } finally {
+      setLoading(prev => ({ ...prev, products: false }));
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -129,13 +175,22 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
         setModalStep('preview');
         break;
       case 'preview':
-        setModalStep('success');
+        handlePublishItem();
         break;
     }
   };
 
   const handlePrevStep = () => {
     switch (modalStep) {
+      case 'selectFarm':
+        setModalStep('main');
+        break;
+      case 'selectCategory':
+        setModalStep('main');
+        break;
+      case 'selectProduct':
+        setModalStep('main');
+        break;
       case 'selectUnit':
         setModalStep('main');
         break;
@@ -149,26 +204,98 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePublishItem = () => {
-    console.log("Publishing item:", formData);
-    handleNextStep();
+  const handlePublishItem = async () => {
+    if (!formData.farmId || !formData.categoryId || !formData.productId || !formData.productGalleryId) {
+      console.error("Required fields are missing");
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    setLoading(prev => ({ ...prev, submitting: true }));
+    try {
+      const payload = {
+        price: parseFloat(formData.price || formData.productPrice),
+        stockQuantity: parseInt(formData.quantity),
+        unit: formData.unit,
+        productGalleryId: parseInt(formData.productGalleryId),
+        farmId: parseInt(formData.farmId),
+      };
+
+      const response = await ProductService.createProduct(payload);
+      
+      if (response.status) {
+        console.log("Product created successfully");
+        setModalStep('success');
+      } else {
+        console.error("Failed to create product:", response.message);
+        alert(`Failed to create product: ${response.message}`);
+      }
+    } catch (error) {
+      console.error("Error publishing item:", error);
+      alert("An error occurred while publishing the item.");
+    } finally {
+      setLoading(prev => ({ ...prev, submitting: false }));
+    }
+  };
+
+  const getSelectedFarm = () => {
+    return farms.find(farm => farm.id === parseInt(formData.farmId));
+  };
+
+  const getSelectedCategory = () => {
+    return categories.find(cat => cat.id === parseInt(formData.categoryId));
+  };
+
+  const getSelectedProduct = () => {
+    return products.find(product => product.id === parseInt(formData.productId));
   };
 
   const resetModal = () => {
     setModalStep('main');
     setFormData({
-      category: "",
-      product: "",
+      farmId: "",
+      farmName: "",
+      categoryId: "",
+      categoryName: "",
+      productId: "",
+      productName: "",
+      productDescription: "",
+      productImageUrl: "",
+      productPrice: "",
+      productGalleryId: "",
       unit: "",
       quantity: "",
-      amount: ""
+      price: ""
+    });
+    setProducts([]);
+    setSearchQuery({
+      farm: "",
+      category: "",
+      product: "",
+      unit: ""
     });
   };
 
-  const filteredProducts = availableItems.filter(item =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFarms = farms.filter(farm =>
+    farm.name.toLowerCase().includes(searchQuery.farm.toLowerCase())
   );
+
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchQuery.category.toLowerCase())
+  );
+
+  const filteredProducts = products.filter(product =>
+    product.name.toLowerCase().includes(searchQuery.product.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchQuery.product.toLowerCase())
+  );
+
+  const filteredUnits = () => {
+    const allUnits = unitCategories.flatMap(category => category.items);
+    if (!searchQuery.unit) return allUnits;
+    return allUnits.filter(unit => 
+      unit.toLowerCase().includes(searchQuery.unit.toLowerCase())
+    );
+  };
 
   const renderModalContent = () => {
     switch (modalStep) {
@@ -178,108 +305,64 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
             <div className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Category
+                  Farm *
                 </label>
-                <div className="relative">
-                  <select
-                    className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none appearance-none bg-white text-gray-900"
-                    value={formData.category}
-                    onChange={(e) => handleFormChange('category', e.target.value)}
-                  >
-                    <option value="">Select Category</option>
-                    <option value="Fresh Tomatoes">Fresh Tomatoes</option>
-                    <option value="Vegetables">Vegetables</option>
-                    <option value="Fruits">Fruits</option>
-                    <option value="Tubers">Tubers</option>
-                  </select>
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <div 
+                  className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setModalStep('selectFarm')}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={formData.farmName ? "text-gray-900" : "text-gray-500"}>
+                      {formData.farmName || "Select Farm"}
+                    </span>
                     <ChevronLeft size={18} className="text-gray-900 -rotate-90" />
                   </div>
                 </div>
               </div>
 
-              <div className="relative" ref={productDropdownRef}>
+              <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Product
+                  Category *
                 </label>
-                
-                {/* Product dropdown trigger */}
                 <div 
                   className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => setShowProductDropdown(!showProductDropdown)}
+                  onClick={() => setModalStep('selectCategory')}
                 >
                   <div className="flex items-center justify-between">
-                    <span className={formData.product ? "text-gray-900" : "text-gray-500"}>
-                      {formData.product || "Select product"}
+                    <span className={formData.categoryName ? "text-gray-900" : "text-gray-500"}>
+                      {formData.categoryName || "Select Category"}
                     </span>
-                    <ChevronLeft size={18} className={`text-gray-900 transition-transform ${showProductDropdown ? 'rotate-90' : '-rotate-90'}`} />
+                    <ChevronLeft size={18} className="text-gray-900 -rotate-90" />
                   </div>
                 </div>
+              </div>
 
-                {/* Product dropdown content */}
-                {showProductDropdown && (
-                  <div className="absolute z-20 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-xl max-h-80 overflow-hidden flex flex-col">
-                    {/* Search bar */}
-                    <div className="sticky top-0 bg-white border-b border-gray-200 p-3">
-                      <div className="relative">
-                        <Search
-                          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-                          size={18}
-                        />
-                        <input
-                          type="text"
-                          placeholder="Search products..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Scrollable product list */}
-                    <div className="flex-1 overflow-y-auto">
-                      {filteredProducts.length > 0 ? (
-                        filteredProducts.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
-                            onClick={() => {
-                              handleFormChange('product', item.name);
-                              setShowProductDropdown(false);
-                              setSearchQuery("");
-                            }}
-                          >
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between">
-                                <span className="font-medium text-gray-900 text-sm">
-                                  {item.name}
-                                </span>
-                                {formData.product === item.name && (
-                                  <Check size={16} className="text-green-600 flex-shrink-0 ml-2" />
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="px-4 py-8 text-center text-gray-500">
-                          No products found
-                        </div>
-                      )}
-                    </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-900 mb-2">
+                  Product *
+                </label>
+                <div 
+                  className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white cursor-pointer hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => formData.categoryId && setModalStep('selectProduct')}
+                  style={{ cursor: formData.categoryId ? 'pointer' : 'not-allowed' }}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={formData.productName ? "text-gray-900" : "text-gray-500"}>
+                      {formData.productName || (formData.categoryId ? "Select Product" : "Select category first")}
+                    </span>
+                    {formData.categoryId && (
+                      <ChevronLeft size={18} className="text-gray-900 -rotate-90" />
+                    )}
                   </div>
+                </div>
+                {!formData.categoryId && (
+                  <p className="mt-1 text-xs text-gray-500">Please select a category first</p>
                 )}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Product Unit
+                  Product Unit *
                 </label>
                 <div 
                   className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white cursor-pointer hover:bg-gray-50 transition-colors"
@@ -296,20 +379,21 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Stock Quantity
+                  Stock Quantity *
                 </label>
                 <input
                   type="number"
                   placeholder="100"
                   value={formData.quantity}
                   onChange={(e) => handleFormChange('quantity', e.target.value)}
-                  className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-gray-50 placeholder:text-gray-500"
+                  className="w-full px-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white text-gray-900 placeholder:text-gray-500"
+                  min="0"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-2">
-                  Amount/unit
+                  Price per unit (₦) *
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-900 font-medium">
@@ -317,26 +401,227 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
                   </span>
                   <input
                     type="number"
-                    placeholder="12,000"
-                    value={formData.amount}
-                    onChange={(e) => handleFormChange('amount', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-gray-50 placeholder:text-gray-500"
+                    placeholder={formData.productPrice ? formData.productPrice : "12000"}
+                    value={formData.price || formData.productPrice}
+                    onChange={(e) => handleFormChange('price', e.target.value)}
+                    className="w-full pl-10 pr-4 py-3.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none bg-white text-gray-900 placeholder:text-gray-500"
+                    min="0"
+                    step="0.01"
                   />
                 </div>
+                {formData.productPrice && !formData.price && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Default price from product: ₦{parseFloat(formData.productPrice).toLocaleString()}
+                  </p>
+                )}
               </div>
             </div>
 
             <button
               onClick={handleNextStep}
-              disabled={!formData.category || !formData.product || !formData.unit || !formData.quantity || !formData.amount}
+              disabled={!formData.farmId || !formData.categoryId || !formData.productId || !formData.unit || !formData.quantity || !(formData.price || formData.productPrice) || loading.submitting}
               className={`w-full mt-8 py-4 font-semibold rounded-full transition-colors uppercase tracking-wide ${
-                formData.category && formData.product && formData.unit && formData.quantity && formData.amount
+                formData.farmId && formData.categoryId && formData.productId && formData.unit && formData.quantity && (formData.price || formData.productPrice) && !loading.submitting
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-gray-200 text-gray-400 cursor-not-allowed'
               }`}
             >
-              PREVIEW ITEM
+              {loading.submitting ? 'PROCESSING...' : 'PREVIEW ITEM'}
             </button>
+          </div>
+        );
+
+      case 'selectFarm':
+        return (
+          <div className="w-full max-w-md mx-auto">
+            <div className="relative mb-6">
+              <Search
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search farms..."
+                value={searchQuery.farm}
+                onChange={(e) => setSearchQuery(prev => ({ ...prev, farm: e.target.value }))}
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg outline-none text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="space-y-0 max-h-[65vh] overflow-y-auto">
+              {loading.farms ? (
+                <div className="py-8 text-center text-gray-500">
+                  Loading farms...
+                </div>
+              ) : filteredFarms.length > 0 ? (
+                filteredFarms.map((farm) => (
+                  <div
+                    key={farm.id}
+                    className="flex items-center justify-between py-3.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      handleFormChange('farmId', farm.id.toString());
+                      handleFormChange('farmName', farm.name);
+                      setModalStep('main');
+                      setSearchQuery(prev => ({ ...prev, farm: "" }));
+                    }}
+                  >
+                    <span className="text-gray-900 font-normal">
+                      {farm.name}
+                    </span>
+                    {formData.farmId === farm.id.toString() && (
+                      <Check size={18} className="text-green-600" />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  {searchQuery.farm ? "No farms found" : "No farms available"}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'selectCategory':
+        return (
+          <div className="w-full max-w-md mx-auto">
+            <div className="relative mb-6">
+              <Search
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search categories..."
+                value={searchQuery.category}
+                onChange={(e) => setSearchQuery(prev => ({ ...prev, category: e.target.value }))}
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg outline-none text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="space-y-0 max-h-[65vh] overflow-y-auto">
+              {loading.categories ? (
+                <div className="py-8 text-center text-gray-500">
+                  Loading categories...
+                </div>
+              ) : filteredCategories.length > 0 ? (
+                filteredCategories.map((category) => (
+                  <div
+                    key={category.id}
+                    className="flex items-center justify-between py-3.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      handleFormChange('categoryId', category.id.toString());
+                      handleFormChange('categoryName', category.name);
+                      handleFormChange('productId', "");
+                      handleFormChange('productName', "");
+                      handleFormChange('productDescription', "");
+                      handleFormChange('productImageUrl', "");
+                      handleFormChange('productPrice', "");
+                      handleFormChange('productGalleryId', "");
+                      setModalStep('main');
+                      setSearchQuery(prev => ({ ...prev, category: "" }));
+                    }}
+                  >
+                    <span className="text-gray-900 font-normal">
+                      {category.name}
+                    </span>
+                    {formData.categoryId === category.id.toString() && (
+                      <Check size={18} className="text-green-600" />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  {searchQuery.category ? "No categories found" : "No categories available"}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'selectProduct':
+        return (
+          <div className="w-full max-w-md mx-auto">
+            <div className="relative mb-6">
+              <Search
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery.product}
+                onChange={(e) => setSearchQuery(prev => ({ ...prev, product: e.target.value }))}
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg outline-none text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+            </div>
+
+            <div className="space-y-0 max-h-[65vh] overflow-y-auto">
+              {loading.products ? (
+                <div className="py-8 text-center text-gray-500">
+                  Loading products...
+                </div>
+              ) : filteredProducts.length > 0 ? (
+                filteredProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center gap-3 py-3.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                    onClick={() => {
+                      handleFormChange('productId', product.id.toString());
+                      handleFormChange('productName', product.name);
+                      handleFormChange('productDescription', product.description);
+                      handleFormChange('productImageUrl', product.imageUrl);
+                      handleFormChange('productPrice', product.price.toString());
+                      handleFormChange('productGalleryId', product.productGalleryId.toString());
+                      if (product.unit && !formData.unit) {
+                        handleFormChange('unit', product.unit);
+                      }
+                      setModalStep('main');
+                      setSearchQuery(prev => ({ ...prev, product: "" }));
+                    }}
+                  >
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=100';
+                      }}
+                    />
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-gray-900 text-sm">
+                          {product.name}
+                        </span>
+                        {formData.productId === product.id.toString() && (
+                          <Check size={18} className="text-green-600 flex-shrink-0 ml-2" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                        {product.description}
+                      </p>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs font-medium text-gray-700">
+                          ₦{product.price.toLocaleString()}/{product.unit.toLowerCase()}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Stock: {product.stockQuantity}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="py-8 text-center text-gray-500">
+                  {searchQuery.product 
+                    ? "No products found" 
+                    : formData.categoryId 
+                    ? "No products in this category" 
+                    : "Please select a category first"}
+                </div>
+              )}
+            </div>
           </div>
         );
 
@@ -350,96 +635,136 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
               />
               <input
                 type="text"
-                placeholder="Search Items"
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-lg outline-none text-sm placeholder:text-gray-400"
+                placeholder="Search units..."
+                value={searchQuery.unit}
+                onChange={(e) => setSearchQuery(prev => ({ ...prev, unit: e.target.value }))}
+                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-lg outline-none text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-green-500 focus:border-transparent"
               />
             </div>
 
             <div className="space-y-6 max-h-[65vh] overflow-y-auto">
-              {unitCategories.map((category) => (
-                <div key={category.name}>
-                  <h3 className="text-xs font-medium text-gray-400 mb-3 uppercase tracking-wider">
-                    {category.name}
-                  </h3>
-                  <div className="space-y-0">
-                    {category.items.map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-center justify-between py-3.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
-                        onClick={() => {
-                          handleFormChange('unit', item);
-                          setModalStep('main');
-                        }}
-                      >
-                        <span className="text-gray-900 font-normal">
-                          {item}
-                        </span>
-                        <ChevronLeft size={18} className="text-gray-400 rotate-180" />
-                      </div>
-                    ))}
+              {unitCategories.map((category) => {
+                const filteredItems = category.items.filter(item =>
+                  item.toLowerCase().includes(searchQuery.unit.toLowerCase())
+                );
+
+                if (filteredItems.length === 0) return null;
+
+                return (
+                  <div key={category.name}>
+                    <h3 className="text-xs font-medium text-gray-400 mb-3 uppercase tracking-wider">
+                      {category.name}
+                    </h3>
+                    <div className="space-y-0">
+                      {filteredItems.map((item) => (
+                        <div
+                          key={item}
+                          className="flex items-center justify-between py-3.5 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0"
+                          onClick={() => {
+                            handleFormChange('unit', item);
+                            setModalStep('main');
+                            setSearchQuery(prev => ({ ...prev, unit: "" }));
+                          }}
+                        >
+                          <span className="text-gray-900 font-normal">
+                            {item}
+                          </span>
+                          {formData.unit === item ? (
+                            <Check size={18} className="text-green-600" />
+                          ) : (
+                            <ChevronLeft size={18} className="text-gray-400 rotate-180" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
 
       case 'preview':
+        const selectedFarm = getSelectedFarm();
+        const selectedCategory = getSelectedCategory();
+        const selectedProduct = getSelectedProduct();
+        
         return (
           <div className="w-full max-w-md mx-auto">
             <h2 className="text-lg font-semibold text-gray-900 mb-6">Preview Item</h2>
 
-            {/* Product Image */}
-            <div className="bg-gray-50 rounded-2xl p-8 mb-6 relative">
-              <img
-                src="https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=400"
-                alt="Fresh Tomatoes"
-                className="w-full h-64 object-contain"
-              />
-              <div className="flex justify-center gap-2 mt-4">
-                <div className="w-2 h-2 rounded-full bg-green-600"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-              </div>
-            </div>
-
-            {/* Product Info */}
             <div className="mb-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {formData.product} ({formData.unit})
-              </h3>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 rounded-full bg-gray-200 overflow-hidden">
-                  <img 
-                    src="https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=50" 
-                    alt="AJT FARMS"
-                    className="w-full h-full object-cover"
+              {selectedProduct?.imageUrl && (
+                <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                  <img
+                    src={selectedProduct.imageUrl}
+                    alt={formData.productName}
+                    className="w-full h-48 object-contain rounded-lg"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=400';
+                    }}
                   />
                 </div>
-                <span className="text-sm text-gray-600">AJT FARMS</span>
-                <div className="flex items-center gap-1 ml-auto">
-                  <span className="text-yellow-500">⭐</span>
-                  <span className="text-sm font-medium">4.5</span>
+              )}
+              
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                {formData.productName} ({formData.unit})
+              </h3>
+              
+              {selectedFarm && (
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-xs font-medium text-gray-600">F</span>
+                  </div>
+                  <span className="text-sm text-gray-600">{selectedFarm.name}</span>
                 </div>
-              </div>
+              )}
 
-              {/* Description */}
-              <div className="mb-4">
-                <h4 className="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
-                  DESCRIPTION
-                </h4>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Grown with care by our dedicated farmers, these tomatoes are plucked at their prime for unrivaled freshness and flavor.{' '}
-                  <span className="text-green-600 font-medium cursor-pointer">Read More</span>
-                </p>
+              {selectedCategory && (
+                <div className="mb-3">
+                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                    {selectedCategory.name}
+                  </span>
+                </div>
+              )}
+
+              {formData.productDescription && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
+                    DESCRIPTION
+                  </h4>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {formData.productDescription}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    PRICE
+                  </div>
+                  <div className="text-lg font-bold text-gray-900">
+                    ₦{parseFloat(formData.price || formData.productPrice || "0").toLocaleString()}
+                  </div>
+                </div>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
+                    STOCK
+                  </div>
+                  <div className="text-lg font-bold text-gray-900">
+                    {formData.quantity} {formData.unit}
+                  </div>
+                </div>
               </div>
             </div>
 
             <button
               onClick={handlePublishItem}
-              className="w-full py-4 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition-colors uppercase tracking-wide"
+              disabled={loading.submitting}
+              className="w-full py-4 bg-green-600 text-white font-semibold rounded-full hover:bg-green-700 transition-colors uppercase tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              PUBLISH
+              {loading.submitting ? 'PUBLISHING...' : 'PUBLISH ITEM'}
             </button>
           </div>
         );
@@ -479,13 +804,14 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
           {modalStep !== 'success' && modalStep !== 'main' && (
             <button
               onClick={handlePrevStep}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              disabled={loading.submitting}
             >
               <ChevronLeft size={20} className="text-gray-900" />
             </button>
@@ -494,6 +820,9 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
           {modalStep === 'success' && <div className="w-10"></div>}
           <h3 className="text-base font-semibold text-gray-900 uppercase tracking-wide">
             {modalStep === 'main' && 'ADD ITEM'}
+            {modalStep === 'selectFarm' && 'Select Farm'}
+            {modalStep === 'selectCategory' && 'Select Category'}
+            {modalStep === 'selectProduct' && 'Select Product'}
             {modalStep === 'selectUnit' && 'Product Unit'}
             {modalStep === 'preview' && 'ADD ITEM'}
             {modalStep === 'success' && ''}
@@ -501,6 +830,7 @@ export default function AddItemModal({ isOpen, onClose }: AddItemModalProps) {
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            disabled={loading.submitting}
           >
             <X size={20} className="text-gray-900" />
           </button>

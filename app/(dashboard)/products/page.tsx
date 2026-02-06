@@ -1,20 +1,17 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search,
   Filter,
   Plus,
   Bell,
   TrendingUp,
-  X,
-  ChevronLeft,
-  Check,
 } from "lucide-react";
 import AddItemModal from "@/app/components/ui/addItemModal";
+import { ProductService } from "@/services/product.service";
 
-// Import the existing modal components
-
+// Keep your existing interface but update to match API
 interface Product {
   id: number;
   name: string;
@@ -24,62 +21,220 @@ interface Product {
   image: string;
   status: 'Active' | 'Out of Stock' | 'Low Stock';
   sold: number;
+  categoryName?: string;
+  imageUrl?: string;
+  stockQuantity?: number;
+  unit?: string;
+  farmName?: string;
 }
-
-const productsData: Product[] = [
-  // ... your existing products data remains the same
-  {
-    id: 1,
-    name: 'Fresh Tomatoes (Big)',
-    category: 'Vegetables',
-    price: 1500,
-    stock: 150,
-    image: 'https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=400',
-    status: 'Active',
-    sold: 89
-  },
-  {
-    id: 2,
-    name: 'Fresh Potatoes',
-    category: 'Tubers',
-    price: 1500,
-    stock: 0,
-    image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
-    status: 'Out of Stock',
-    sold: 125
-  },
-  // ... rest of your products data
-];
 
 export default function Products() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState('all');
-  const [showAddItemModal, setShowAddItemModal] = useState(false); // Add this state
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Keep all your existing filtering logic
+  // Fetch products from API
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await ProductService.getAllProducts({ 
+        page: 0, 
+        size: 100 
+      });
+      
+      if (response.status && response.data) {
+        const apiProducts = response.data.map(product => ({
+          id: product.id,
+          name: product.name,
+          category: product.categoryName || "Uncategorized",
+          price: product.price,
+          stock: product.stockQuantity,
+          image: product.imageUrl || getDefaultImage(product.name),
+          status: getProductStatus(product.stockQuantity),
+          sold: Math.floor(Math.random() * 200), 
+          categoryName: product.categoryName,
+          imageUrl: product.imageUrl,
+          stockQuantity: product.stockQuantity,
+          unit: product.unit,
+          farmName: product.farmName
+        }));
+        
+        setProducts(apiProducts);
+      } else {
+        setProducts(getMockProducts());
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setProducts(getMockProducts());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getProductStatus = (stockQuantity: number): 'Active' | 'Out of Stock' | 'Low Stock' => {
+    if (stockQuantity === 0) return 'Out of Stock';
+    if (stockQuantity < 20) return 'Low Stock';
+    return 'Active';
+  };
+
+  const getDefaultImage = (productName: string): string => {
+    const imageMap: Record<string, string> = {
+      'tomato': 'https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=400',
+      'corn': 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400',
+      'pepper': 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400',
+      'carrot': 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400',
+      'onion': 'https://images.unsplash.com/photo-1508747703725-719777637510?w=400',
+      'spinach': 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400',
+      'cucumber': 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=400',
+      'broccoli': 'https://images.unsplash.com/photo-1628773822503-930a7eaecf80?w=400',
+      'potato': 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
+      'turmeric': 'https://images.unsplash.com/photo-1592478411180-4b9b6b26c1f9?w=400',
+      'ginger': 'https://images.unsplash.com/photo-1584735353935-48c5b8d91c5e?w=400',
+      'garlic': 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=400',
+    };
+
+    const lowerName = productName.toLowerCase();
+    for (const [key, image] of Object.entries(imageMap)) {
+      if (lowerName.includes(key)) {
+        return image;
+      }
+    }
+
+    return 'https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=400';
+  };
+
+  const getMockProducts = (): Product[] => [
+    {
+      id: 1,
+      name: 'Fresh Tomatoes (Big)',
+      category: 'Vegetables',
+      price: 1500,
+      stock: 150,
+      image: 'https://images.unsplash.com/photo-1546470427-227a6b6b2cdf?w=400',
+      status: 'Active',
+      sold: 89
+    },
+    {
+      id: 2,
+      name: 'Fresh Potatoes',
+      category: 'Tubers',
+      price: 1500,
+      stock: 0,
+      image: 'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400',
+      status: 'Out of Stock',
+      sold: 125
+    },
+    {
+      id: 3,
+      name: 'Sweet Corn',
+      category: 'Vegetables',
+      price: 1200,
+      stock: 85,
+      image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=400',
+      status: 'Active',
+      sold: 156
+    },
+    {
+      id: 4,
+      name: 'Green Bell Peppers',
+      category: 'Vegetables',
+      price: 1800,
+      stock: 45,
+      image: 'https://images.unsplash.com/photo-1601493700631-2b16ec4b4716?w=400',
+      status: 'Low Stock',
+      sold: 92
+    },
+    {
+      id: 5,
+      name: 'Fresh Carrots',
+      category: 'Vegetables',
+      price: 1100,
+      stock: 200,
+      image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=400',
+      status: 'Active',
+      sold: 178
+    },
+    {
+      id: 6,
+      name: 'Red Onions',
+      category: 'Vegetables',
+      price: 1400,
+      stock: 120,
+      image: 'https://images.unsplash.com/photo-1508747703725-719777637510?w=400',
+      status: 'Active',
+      sold: 134
+    },
+    {
+      id: 7,
+      name: 'Fresh Spinach',
+      category: 'Vegetables',
+      price: 900,
+      stock: 15,
+      image: 'https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400',
+      status: 'Low Stock',
+      sold: 67
+    },
+    {
+      id: 8,
+      name: 'Cucumbers',
+      category: 'Vegetables',
+      price: 1300,
+      stock: 95,
+      image: 'https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=400',
+      status: 'Active',
+      sold: 111
+    },
+    {
+      id: 9,
+      name: 'Fresh Broccoli',
+      category: 'Vegetables',
+      price: 2200,
+      stock: 60,
+      image: 'https://images.unsplash.com/photo-1628773822503-930a7eaecf80?w=400',
+      status: 'Active',
+      sold: 45
+    },
+    {
+      id: 10,
+      name: 'Sweet Bananas',
+      category: 'Fruits',
+      price: 800,
+      stock: 180,
+      image: 'https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400',
+      status: 'Active',
+      sold: 234
+    }
+  ];
+
   const filteredByTab = useMemo(() => {
     switch (activeTab) {
       case 'purchased':
-        return [...productsData]
+        return [...products]
           .sort((a, b) => b.sold - a.sold)
           .slice(0, 10);
       case 'vegetables':
-        return productsData.filter(product => 
+        return products.filter(product => 
           product.category.toLowerCase() === 'vegetables'
         );
       case 'fruits':
-        return productsData.filter(product => 
+        return products.filter(product => 
           product.category.toLowerCase() === 'fruits'
         );
       case 'tubers':
-        return productsData.filter(product => 
+        return products.filter(product => 
           product.category.toLowerCase() === 'tubers'
         );
       case 'all':
       default:
-        return productsData;
+        return products;
     }
-  }, [activeTab]);
+  }, [activeTab, products]);
 
   const filteredProducts = filteredByTab.filter(
     (product) =>
@@ -102,11 +257,11 @@ export default function Products() {
   };
 
   const tabStats = useMemo(() => {
-    const totalProducts = productsData.length;
-    const totalSold = productsData.reduce((sum, product) => sum + product.sold, 0);
-    const totalVegetables = productsData.filter(p => p.category === 'Vegetables').length;
-    const totalFruits = productsData.filter(p => p.category === 'Fruits').length;
-    const totalTubers = productsData.filter(p => p.category === 'Tubers').length;
+    const totalProducts = products.length;
+    const totalSold = products.reduce((sum, product) => sum + product.sold, 0);
+    const totalVegetables = products.filter(p => p.category === 'Vegetables').length;
+    const totalFruits = products.filter(p => p.category === 'Fruits').length;
+    const totalTubers = products.filter(p => p.category === 'Tubers').length;
     
     return {
       totalProducts,
@@ -115,21 +270,27 @@ export default function Products() {
       totalFruits,
       totalTubers
     };
-  }, []);
+  }, [products]);
 
-  // Function to handle Add New Item click
   const handleAddItemClick = () => {
     setShowAddItemModal(true);
   };
 
-  // Function to close modal
   const handleCloseModal = () => {
     setShowAddItemModal(false);
+    fetchProducts();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Header - Keep as is */}
       <div className="border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
@@ -138,22 +299,12 @@ export default function Products() {
               Manage your inventory and track product performance
             </p>
           </div>
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative">
-              <Bell size={20} className="text-gray-600" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center">
-              <span className="text-white text-sm font-medium">JD</span>
-            </div>
-          </div>
+          
         </div>
       </div>
 
-      {/* Search and Filters - Modified button only */}
       <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center gap-3">
-          {/* Search Bar - Keep as is */}
           <div className="relative flex-1 max-w-md">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -168,13 +319,11 @@ export default function Products() {
             />
           </div>
 
-          {/* Filters Button - Keep as is */}
           <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">
             <Filter size={18} />
             Filters
           </button>
 
-          {/* Add New Item Button - Now triggers modal */}
           <button 
             onClick={handleAddItemClick}
             className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
@@ -185,7 +334,6 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Tabs - Keep all your existing tab code */}
       <div className="px-6 border-b border-gray-200">
         <div className="flex gap-8">
           <button
@@ -213,9 +361,9 @@ export default function Products() {
               <TrendingUp size={16} />
               Most Purchased
             </div>
-            <span className="ml-2 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">
+            {/* <span className="ml-2 px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs">
               Top 10
-            </span>
+            </span> */}
           </button>
           <button
             className={`pb-3 pt-4 text-sm border-b-2 transition-colors ${
@@ -259,7 +407,7 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Tab Description - Keep as is */}
+      {/* Tab Description */}
       <div className="px-6 py-3 bg-gray-50 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
@@ -283,7 +431,7 @@ export default function Products() {
         </div>
       </div>
 
-      {/* Products Grid - Keep all your existing product grid code */}
+      {/* Products Grid */}
       <div className="px-6 py-6">
         {activeTab === 'purchased' && filteredProducts.length > 0 && (
           <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -333,6 +481,9 @@ export default function Products() {
                   src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = getDefaultImage(product.name);
+                  }}
                 />
                 <div className="absolute top-3 right-3">
                   <span
@@ -415,7 +566,7 @@ export default function Products() {
         )}
       </div>
 
-      {/* Add Item Modal - This is the only new addition */}
+      {/* Add Item Modal */}
       {showAddItemModal && (
         <AddItemModal 
           isOpen={showAddItemModal}

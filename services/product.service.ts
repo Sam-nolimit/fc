@@ -1,67 +1,110 @@
+// services/product.service.ts
 import { api } from "@/lib/axios-api";
 
 export interface Product {
   id: number;
   productGalleryId: number;
+  name: string;
+  description: string;
+  imageUrl: string;
   price: number;
   stockQuantity: number;
   unit: string;
-  createdAt?: string;
-  updatedAt?: string;
+  categoryId: number;
+  categoryName: string;
+  farmId: number;
+  farmName: string;
+  distanceKm: number | null;
 }
 
-export interface CreateProductPayload {
-  productGalleryId: number;
-  price: number;
-  stockQuantity: number;
-  unit: string;
-}
-
-export interface UpdateProductPayload {
-  productGalleryId?: number;
-  price?: number;
-  stockQuantity?: number;
-  unit?: string;
-}
-
-export interface ProductResponse {
-  data: Product | null;
-  message: string;
-  status: boolean;
-  timeCreated: string;
-}
-
-export interface ProductsResponse {
-  data: Product[] | null;
-  message: string;
-  status: boolean;
-  timeCreated: string;
-}
-
-export interface DeleteProductResponse {
-  data: any | null;
+export interface ProductsApiResponse {
+  data: {
+    content: Product[];
+    empty: boolean;
+    first: boolean;
+    last: boolean;
+    number: number;
+    numberOfElements: number;
+    pageable: any;
+    size: number;
+    sort: any;
+    totalElements: number;
+    totalPages: number;
+  };
   message: string;
   status: boolean;
   timeCreated: string;
 }
 
 export const ProductService = {
-  /**
-   * Create a new product
-   * POST {{baseUrl}}api/v1/products
-   */
-  async createProduct(payload: CreateProductPayload) {
+  async getAllProducts(params?: { 
+    categoryId?: number; 
+    farmId?: number; 
+    page?: number; 
+    size?: number;
+    search?: string;
+  }) {
     try {
-      const response = await api.post<ProductResponse>("/products", payload);
+      console.log("ProductService - Calling API with params:", params);
       
+      const response = await api.get<ProductsApiResponse>("/products/all", {
+        params: {
+          page: params?.page || 0,
+          size: params?.size || 200,
+          categoryId: params?.categoryId,
+          farmId: params?.farmId,
+          search: params?.search
+        }
+      });
+
+      console.log("ProductService - Raw response:", response);
+      
+      // The interceptor already returns the content directly
+      const products = response?.content || [];
+      
+      console.log("ProductService - Extracted products:", products);
+      console.log("Product names:", products.map(p => p.name));
+
       return {
-        data: response.data?.data || response.data || null,
-        message: response.data?.message || response.message || "Product created successfully",
-        status: response.data?.status ?? true,
-        timeCreated: response.data?.timeCreated || new Date().toISOString()
+        data: products,
+        message: "Products retrieved successfully",
+        status: true,
+        timeCreated: new Date().toISOString()
       };
     } catch (error: any) {
-      console.error("Create product error:", error);
+      console.error("ProductService - Error details:", error);
+      console.error("Error response:", error.response);
+      
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error ||
+                          error.message || 
+                          "Failed to get products";
+      
+      return {
+        data: [],
+        message: errorMessage,
+        status: false,
+        timeCreated: new Date().toISOString()
+      };
+    }
+  },
+
+  async createProduct(payload: any) {
+    try {
+      console.log("ProductService - Creating product:", payload);
+      
+      const response = await api.post("/products", payload);
+      
+      console.log("ProductService - Create response:", response);
+
+      return {
+        data: response,
+        message: "Product created successfully",
+        status: true,
+        timeCreated: new Date().toISOString()
+      };
+    } catch (error: any) {
+      console.error("ProductService - Create error:", error);
       
       const errorMessage = error.response?.data?.message || 
                           error.response?.data?.error ||
@@ -77,158 +120,5 @@ export const ProductService = {
     }
   },
 
-  /**
-   * Get a product by ID
-   * GET {{baseUrl}}api/v1/products/:id
-   */
-  async getProductById(id: number) {
-    try {
-      const response = await api.get<ProductResponse>(`/products/${id}`);
-      
-      return {
-        data: response.data?.data || response.data || null,
-        message: response.data?.message || response.message || "Product retrieved successfully",
-        status: response.data?.status ?? true,
-        timeCreated: response.data?.timeCreated || new Date().toISOString()
-      };
-    } catch (error: any) {
-      console.error("Get product error:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message || 
-                          "Failed to get product";
-      
-      return {
-        data: null,
-        message: errorMessage,
-        status: false,
-        timeCreated: new Date().toISOString()
-      };
-    }
-  },
-
-  /**
-   * Get products by farm ID
-   * GET {{baseUrl}}api/v1/products/farm/:farmId
-   */
-  async getProductsByFarm(farmId: number) {
-    try {
-      const response = await api.get<ProductsResponse>(`/products/farm/${farmId}`);
-      
-      return {
-        data: response.data?.data || response.data || [],
-        message: response.data?.message || response.message || "Products retrieved successfully",
-        status: response.data?.status ?? true,
-        timeCreated: response.data?.timeCreated || new Date().toISOString()
-      };
-    } catch (error: any) {
-      console.error("Get products by farm error:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message || 
-                          "Failed to get products by farm";
-      
-      return {
-        data: [],
-        message: errorMessage,
-        status: false,
-        timeCreated: new Date().toISOString()
-      };
-    }
-  },
-
-  /**
-   * Update a product
-   * PUT {{baseUrl}}api/v1/products/:id
-   */
-  async updateProduct(id: number, payload: UpdateProductPayload) {
-    try {
-      const response = await api.put<ProductResponse>(`/products/${id}`, payload);
-      
-      return {
-        data: response.data?.data || response.data || null,
-        message: response.data?.message || response.message || "Product updated successfully",
-        status: response.data?.status ?? true,
-        timeCreated: response.data?.timeCreated || new Date().toISOString()
-      };
-    } catch (error: any) {
-      console.error("Update product error:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message || 
-                          "Failed to update product";
-      
-      return {
-        data: null,
-        message: errorMessage,
-        status: false,
-        timeCreated: new Date().toISOString()
-      };
-    }
-  },
-
-  /**
-   * Delete a product
-   * DELETE {{baseUrl}}api/v1/products/:id
-   */
-  async deleteProduct(id: number) {
-    try {
-      const response = await api.delete<DeleteProductResponse>(`/products/${id}`);
-      
-      return {
-        data: response.data?.data || null,
-        message: response.data?.message || response.message || "Product deleted successfully",
-        status: response.data?.status ?? true,
-        timeCreated: response.data?.timeCreated || new Date().toISOString()
-      };
-    } catch (error: any) {
-      console.error("Delete product error:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message || 
-                          "Failed to delete product";
-      
-      return {
-        data: null,
-        message: errorMessage,
-        status: false,
-        timeCreated: new Date().toISOString()
-      };
-    }
-  },
-
-  /**
-   * Get recently added products
-   * GET {{baseUrl}}api/v1/products/recent
-   */
-  async getRecentProducts() {
-    try {
-      const response = await api.get<ProductsResponse>("/products/recent");
-      
-      return {
-        data: response.data?.data || response.data || [],
-        message: response.data?.message || response.message || "Recent products retrieved successfully",
-        status: response.data?.status ?? true,
-        timeCreated: response.data?.timeCreated || new Date().toISOString()
-      };
-    } catch (error: any) {
-      console.error("Get recent products error:", error);
-      
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error ||
-                          error.message || 
-                          "Failed to get recent products";
-      
-      return {
-        data: [],
-        message: errorMessage,
-        status: false,
-        timeCreated: new Date().toISOString()
-      };
-    }
-  }
+  // ... other methods
 };
