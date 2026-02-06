@@ -52,6 +52,8 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
 
   const displayedNavItems = isGuest
@@ -62,6 +64,24 @@ export default function DashboardLayout({
     window.location.href = "/login";
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
+    setIsLoggingOut(true);
+    // Simulate logout process
+    setTimeout(() => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user");
+      window.location.href = "/login";
+    }, 1000);
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutModal(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Mobile overlay */}
@@ -70,6 +90,101 @@ export default function DashboardLayout({
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
+      )}
+
+      {/* Logout Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative animate-in fade-in zoom-in duration-200">
+            {/* Icon */}
+            <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-6">
+              {isLoggingOut ? (
+                <svg
+                  className="w-8 h-8 text-white animate-spin"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+              )}
+            </div>
+
+            {/* Content */}
+            <h2 className="text-2xl font-bold text-gray-900 mb-3">
+              {isLoggingOut ? "Signing Out..." : "Sign Out"}
+            </h2>
+            <p className="text-gray-600 mb-8 leading-relaxed">
+              {isLoggingOut
+                ? "Please wait while we sign you out of your account."
+                : "Are you sure you would like to sign out of your account, a password will be required to sign back in."}
+            </p>
+
+            {/* Buttons */}
+            <div className="flex items-center justify-end gap-4">
+              <button
+                onClick={handleLogoutCancel}
+                disabled={isLoggingOut}
+                className="px-6 py-3 text-green-700 font-semibold hover:bg-green-50 rounded-lg transition-colors uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogoutConfirm}
+                disabled={isLoggingOut}
+                className="px-8 py-3 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-full transition-colors uppercase text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isLoggingOut && (
+                  <svg
+                    className="w-4 h-4 animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                )}
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Sidebar */}
@@ -210,11 +325,7 @@ export default function DashboardLayout({
               </button>
             ) : (
               <button
-                onClick={() => {
-                  localStorage.removeItem("access_token");
-                  localStorage.removeItem("user");
-                  window.location.href = "/login";
-                }}
+                onClick={handleLogoutClick}
                 className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-red-600 hover:bg-red-50"
               >
                 {/* Logout icon as image */}

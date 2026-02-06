@@ -148,14 +148,21 @@ export default function CustomerPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Customer</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Farmers</h1>
+          <p className="text-gray-600 mt-1">Manage all registered farmers</p>
         </div>
+        <Button className="bg-green-600 hover:bg-green-700">
+          Add New Farmer
+        </Button>
       </div>
 
+      {/* Search and Filters Section */}
       <div className="bg-white rounded-xl border border-gray-200 p-4">
         <div className="flex flex-col md:flex-row gap-4">
+          {/* Search Bar */}
           <div className="flex-1">
             <div className="relative">
               <Search
@@ -171,9 +178,22 @@ export default function CustomerPage() {
               />
             </div>
           </div>
+
+          {/* Filter and Export Buttons */}
+          <div className="flex items-center gap-3">
+            <Button variant="outline" className="gap-2">
+              <Filter size={18} />
+              Filters
+            </Button>
+            <Button variant="outline" className="gap-2" onClick={handleExport}>
+              <Download size={18} />
+              Export
+            </Button>
+          </div>
         </div>
       </div>
 
+      {/* Farmers Table */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -185,7 +205,9 @@ export default function CustomerPage() {
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-700 uppercase tracking-wider">
                   Email address
                 </th>
-
+                <th className="text-left py-4 px-6 text-sm font-medium text-gray-700 uppercase tracking-wider">
+                  Address
+                </th>
                 <th className="text-left py-4 px-6 text-sm font-medium text-gray-700 uppercase tracking-wider">
                   Phone number
                 </th>
@@ -235,6 +257,7 @@ export default function CustomerPage() {
                         <MoreVertical size={18} />
                       </button>
 
+                      {/* Dropdown Menu */}
                       {activeMenu === farmer.id && (
                         <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                           <div className="py-1">

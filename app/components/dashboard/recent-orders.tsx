@@ -26,7 +26,7 @@ const orders: Order[] = [
     farm: "Sunny Acres",
     payment: "Interswitch",
     amount: 18950,
-    status: "paid"
+    status: "paid",
   },
   {
     id: "2",
@@ -37,7 +37,7 @@ const orders: Order[] = [
     farm: "Green Pastures",
     payment: "Debit Card",
     amount: 22300,
-    status: "paid"
+    status: "paid",
   },
   {
     id: "3",
@@ -48,7 +48,7 @@ const orders: Order[] = [
     farm: "Whispering Pines",
     payment: "Apple Pay",
     amount: 27480,
-    status: "processing"
+    status: "processing",
   },
   {
     id: "4",
@@ -59,7 +59,7 @@ const orders: Order[] = [
     farm: "Golden Fields",
     payment: "Debit Card",
     amount: 31750,
-    status: "paid"
+    status: "paid",
   },
   {
     id: "5",
@@ -70,7 +70,7 @@ const orders: Order[] = [
     farm: "Clover Hill",
     payment: "Debit Card",
     amount: 36900,
-    status: "processing"
+    status: "processing",
   },
 ];
 
@@ -88,7 +88,8 @@ export default function RecentOrders() {
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900">Order History</h3>
         <div className="flex items-center gap-2">
-          <select 
+          <select
+            aria-label="Filter orders"
             className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
@@ -108,34 +109,65 @@ export default function RecentOrders() {
         <table className="w-full">
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Date</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Customer</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Item(s)</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Order Number</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Farm</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Payment</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Amount (₦)</th>
-              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Status</th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Date
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Customer
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Item(s)
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Order Number
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Farm
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Payment
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Amount (₦)
+              </th>
+              <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">
+                Status
+              </th>
               <th className="text-left py-3 px-4 text-sm font-medium text-gray-500"></th>
             </tr>
           </thead>
           <tbody>
             {orders.map((order) => (
-              <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr
+                key={order.id}
+                className="border-b border-gray-100 hover:bg-gray-50"
+              >
                 <td className="py-3 px-4 text-sm">{order.date}</td>
-                <td className="py-3 px-4 text-sm font-medium">{order.customer}</td>
+                <td className="py-3 px-4 text-sm font-medium">
+                  {order.customer}
+                </td>
                 <td className="py-3 px-4 text-sm">{order.items}</td>
-                <td className="py-3 px-4 text-sm text-gray-500">{order.orderNumber}</td>
+                <td className="py-3 px-4 text-sm text-gray-500">
+                  {order.orderNumber}
+                </td>
                 <td className="py-3 px-4 text-sm">{order.farm}</td>
                 <td className="py-3 px-4 text-sm">{order.payment}</td>
-                <td className="py-3 px-4 text-sm font-medium">{order.amount.toLocaleString()}</td>
+                <td className="py-3 px-4 text-sm font-medium">
+                  {order.amount.toLocaleString()}
+                </td>
                 <td className="py-3 px-4 text-sm">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}>
-                    {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[order.status]}`}
+                  >
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
                   </span>
                 </td>
                 <td className="py-3 px-4 text-sm">
-                  <button className="p-1 hover:bg-gray-100 rounded">
+                  <button
+                    aria-label="More actions"
+                    className="p-1 hover:bg-gray-100 rounded"
+                  >
                     <MoreVertical size={16} />
                   </button>
                 </td>
@@ -147,9 +179,7 @@ export default function RecentOrders() {
 
       {/* Pagination */}
       <div className="flex items-center justify-between mt-6 pt-6 border-t border-gray-200">
-        <div className="text-sm text-gray-500">
-          Showing 1-5 of 8 orders
-        </div>
+        <div className="text-sm text-gray-500">Showing 1-5 of 8 orders</div>
         <div className="flex items-center gap-1">
           <button className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
             1

@@ -1,7 +1,21 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Search, Filter, Download, Eye, Trash2, MoreVertical, Package, CheckCircle, AlertCircle, Clock, XCircle, Truck, CreditCard } from "lucide-react";
+import {
+  Search,
+  Filter,
+  Download,
+  Eye,
+  Trash2,
+  MoreVertical,
+  Package,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  XCircle,
+  Truck,
+  CreditCard,
+} from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 
 interface Order {
@@ -21,31 +35,144 @@ export default function OrdersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeMenu, setActiveMenu] = useState<number | null>(null);
   const menuRefs = useRef<(HTMLDivElement | null)[]>([]);
-  
+
   const [orders] = useState<Order[]>([
-    { id: 1, orderNumber: "1234567ABCD", orderDate: "Nov 12, 2025", farmName: "Chijoke Okafor", deliveryDate: "Nov 12, 2025", address: "No. 14 Idumagbo, Laq", items: 1, paymentMethod: "Interswitch", amount: "18,950", status: "delivered" },
-    { id: 2, orderNumber: "4567890MNOP", orderDate: "Oct 29, 2025", farmName: "Adaobi Nwosu", deliveryDate: "Oct 29, 2025", address: "7 Olumo Rock Rd, Ab", items: 4, paymentMethod: "Debit Card", amount: "22,300", status: "delivered" },
-    { id: 3, orderNumber: "2345678ORST", orderDate: "Sep 04, 2025", farmName: "Tunde Adebayo", deliveryDate: "Sep 04, 2025", address: "12 Eko Bridge, Lagos", items: 8, paymentMethod: "Apple Pay", amount: "27,480", status: "pending" },
-    { id: 4, orderNumber: "9876543IJKL", orderDate: "Aug 15, 2025", farmName: "Ifeoma Eze", deliveryDate: "Aug 15, 2025", address: "23 Zuma Rock, Abuja", items: 3, paymentMethod: "Debit Card", amount: "31,750", status: "delivered" },
-    { id: 5, orderNumber: "7654321EFGH", orderDate: "Jul 23, 2025", farmName: "Emeka Nwachukwu", deliveryDate: "Jul 23, 2025", address: "9 Aso Rock, Abuja", items: 4, paymentMethod: "Debit Card", amount: "36,900", status: "processing" },
-    { id: 6, orderNumber: "3456789UVWX", orderDate: "Jun 07, 2025", farmName: "Ngozi Uche", deliveryDate: "Jun 07, 2025", address: "15 Lekki Conservatii", items: 7, paymentMethod: "Interswitch", amount: "42,150", status: "delivered" },
-    { id: 7, orderNumber: "8765432YZAB", orderDate: "May 19, 2025", farmName: "Chinedu Obi", deliveryDate: "May 19, 2025", address: "3 Yankari Game Res", items: 2, paymentMethod: "Interswitch", amount: "47,880", status: "cancelled" },
-    { id: 8, orderNumber: "5432101CDEF", orderDate: "Apr 11, 2025", farmName: "Amara Nnebe", deliveryDate: "Apr 11, 2025", address: "10 Obudu Mountain F", items: 1, paymentMethod: "Debit Card", amount: "53,200", status: "delivered" },
-    { id: 9, orderNumber: "6543210GHIJ", orderDate: "Mar 28, 2025", farmName: "Obinna Chukwu", deliveryDate: "Mar 28, 2025", address: "20 Kainji National Pa", items: 2, paymentMethod: "Financing Pl", amount: "58,990", status: "on-hold" },
-    { id: 10, orderNumber: "7890123KLMN", orderDate: "Feb 02, 2025", farmName: "Zainab Bello", deliveryDate: "Feb 02, 2025", address: "5 Ogbinike Cave, An", items: 5, paymentMethod: "Debit Card", amount: "64,500", status: "delivered" },
+    {
+      id: 1,
+      orderNumber: "1234567ABCD",
+      orderDate: "Nov 12, 2025",
+      farmName: "Chijoke Okafor",
+      deliveryDate: "Nov 12, 2025",
+      address: "No. 14 Idumagbo, Laq",
+      items: 1,
+      paymentMethod: "Interswitch",
+      amount: "18,950",
+      status: "delivered",
+    },
+    {
+      id: 2,
+      orderNumber: "4567890MNOP",
+      orderDate: "Oct 29, 2025",
+      farmName: "Adaobi Nwosu",
+      deliveryDate: "Oct 29, 2025",
+      address: "7 Olumo Rock Rd, Ab",
+      items: 4,
+      paymentMethod: "Debit Card",
+      amount: "22,300",
+      status: "delivered",
+    },
+    {
+      id: 3,
+      orderNumber: "2345678ORST",
+      orderDate: "Sep 04, 2025",
+      farmName: "Tunde Adebayo",
+      deliveryDate: "Sep 04, 2025",
+      address: "12 Eko Bridge, Lagos",
+      items: 8,
+      paymentMethod: "Apple Pay",
+      amount: "27,480",
+      status: "pending",
+    },
+    {
+      id: 4,
+      orderNumber: "9876543IJKL",
+      orderDate: "Aug 15, 2025",
+      farmName: "Ifeoma Eze",
+      deliveryDate: "Aug 15, 2025",
+      address: "23 Zuma Rock, Abuja",
+      items: 3,
+      paymentMethod: "Debit Card",
+      amount: "31,750",
+      status: "delivered",
+    },
+    {
+      id: 5,
+      orderNumber: "7654321EFGH",
+      orderDate: "Jul 23, 2025",
+      farmName: "Emeka Nwachukwu",
+      deliveryDate: "Jul 23, 2025",
+      address: "9 Aso Rock, Abuja",
+      items: 4,
+      paymentMethod: "Debit Card",
+      amount: "36,900",
+      status: "processing",
+    },
+    {
+      id: 6,
+      orderNumber: "3456789UVWX",
+      orderDate: "Jun 07, 2025",
+      farmName: "Ngozi Uche",
+      deliveryDate: "Jun 07, 2025",
+      address: "15 Lekki Conservatii",
+      items: 7,
+      paymentMethod: "Interswitch",
+      amount: "42,150",
+      status: "delivered",
+    },
+    {
+      id: 7,
+      orderNumber: "8765432YZAB",
+      orderDate: "May 19, 2025",
+      farmName: "Chinedu Obi",
+      deliveryDate: "May 19, 2025",
+      address: "3 Yankari Game Res",
+      items: 2,
+      paymentMethod: "Interswitch",
+      amount: "47,880",
+      status: "cancelled",
+    },
+    {
+      id: 8,
+      orderNumber: "5432101CDEF",
+      orderDate: "Apr 11, 2025",
+      farmName: "Amara Nnebe",
+      deliveryDate: "Apr 11, 2025",
+      address: "10 Obudu Mountain F",
+      items: 1,
+      paymentMethod: "Debit Card",
+      amount: "53,200",
+      status: "delivered",
+    },
+    {
+      id: 9,
+      orderNumber: "6543210GHIJ",
+      orderDate: "Mar 28, 2025",
+      farmName: "Obinna Chukwu",
+      deliveryDate: "Mar 28, 2025",
+      address: "20 Kainji National Pa",
+      items: 2,
+      paymentMethod: "Financing Pl",
+      amount: "58,990",
+      status: "on-hold",
+    },
+    {
+      id: 10,
+      orderNumber: "7890123KLMN",
+      orderDate: "Feb 02, 2025",
+      farmName: "Zainab Bello",
+      deliveryDate: "Feb 02, 2025",
+      address: "5 Ogbinike Cave, An",
+      items: 5,
+      paymentMethod: "Debit Card",
+      amount: "64,500",
+      status: "delivered",
+    },
   ]);
 
-  const filteredOrders = orders.filter(order =>
-    order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.farmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.amount.includes(searchTerm) ||
-    order.status.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.farmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.amount.includes(searchTerm) ||
+      order.status.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const totalOrders = orders.length;
-  const completedOrders = orders.filter(order => order.status === "delivered").length;
+  const completedOrders = orders.filter(
+    (order) => order.status === "delivered",
+  ).length;
 
   const handleViewDetails = (order: Order) => {
     console.log("View details:", order);
@@ -71,7 +198,11 @@ export default function OrdersPage() {
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (!menuRefs.current.some(ref => ref && ref.contains(event.target as Node))) {
+      if (
+        !menuRefs.current.some(
+          (ref) => ref && ref.contains(event.target as Node),
+        )
+      ) {
         setActiveMenu(null);
       }
     };
@@ -139,7 +270,9 @@ export default function OrdersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Orders</h1>
-          <p className="text-gray-600 mt-1">Manage and track all customer orders</p>
+          <p className="text-gray-600 mt-1">
+            Manage and track all customer orders
+          </p>
         </div>
       </div>
 
@@ -149,7 +282,9 @@ export default function OrdersPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Orders</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{totalOrders}</p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {totalOrders}
+              </p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
               <Package className="text-blue-600" size={24} />
@@ -160,8 +295,12 @@ export default function OrdersPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Completed Orders</p>
-              <p className="text-3xl font-bold text-gray-900 mt-2">{completedOrders}</p>
+              <p className="text-sm font-medium text-gray-600">
+                Total Completed Orders
+              </p>
+              <p className="text-3xl font-bold text-gray-900 mt-2">
+                {completedOrders}
+              </p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
               <CheckCircle className="text-green-600" size={24} />
@@ -176,7 +315,10 @@ export default function OrdersPage() {
           {/* Search Bar */}
           <div className="flex-1">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
               <input
                 type="text"
                 placeholder="Search orders by order number, farm name, address, or status..."
@@ -241,22 +383,34 @@ export default function OrdersPage() {
             </thead>
             <tbody className="divide-y divide-gray-200">
               {filteredOrders.map((order, index) => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={order.id}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="py-4 px-6">
-                    <span className="font-medium text-gray-900">{order.orderNumber}</span>
+                    <span className="font-medium text-gray-900">
+                      {order.orderNumber}
+                    </span>
                   </td>
                   <td className="py-4 px-6 text-gray-600">{order.orderDate}</td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
                         <span className="text-green-700 font-medium text-xs">
-                          {order.farmName.split(' ').map(n => n[0]).join('')}
+                          {order.farmName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </span>
                       </div>
-                      <span className="font-medium text-gray-900">{order.farmName}</span>
+                      <span className="font-medium text-gray-900">
+                        {order.farmName}
+                      </span>
                     </div>
                   </td>
-                  <td className="py-4 px-6 text-gray-600">{order.deliveryDate}</td>
+                  <td className="py-4 px-6 text-gray-600">
+                    {order.deliveryDate}
+                  </td>
                   <td className="py-4 px-6 text-gray-600">{order.address}</td>
                   <td className="py-4 px-6">
                     <span className="inline-flex items-center justify-center w-8 h-8 bg-gray-100 rounded-full text-sm font-medium text-gray-700">
@@ -266,29 +420,41 @@ export default function OrdersPage() {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       <CreditCard className="text-gray-400" size={16} />
-                      <span className="text-gray-600">{order.paymentMethod}</span>
+                      <span className="text-gray-600">
+                        {order.paymentMethod}
+                      </span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <span className="font-medium text-gray-900">₦{order.amount}</span>
+                    <span className="font-medium text-gray-900">
+                      ₦{order.amount}
+                    </span>
                   </td>
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       {getStatusIcon(order.status)}
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}
+                      >
                         {formatStatus(order.status)}
                       </span>
                     </div>
                   </td>
                   <td className="py-4 px-6">
-                    <div className="relative" ref={el => menuRefs.current[index] = el}>
+                    <div
+                      className="relative"
+                      ref={(el) => {
+                        menuRefs.current[index] = el;
+                      }}
+                    >
                       <button
+                        aria-label="More actions"
                         onClick={() => toggleMenu(order.id)}
                         className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                       >
                         <MoreVertical size={18} />
                       </button>
-                      
+
                       {/* Dropdown Menu */}
                       {activeMenu === order.id && (
                         <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
@@ -324,7 +490,9 @@ export default function OrdersPage() {
             <div className="text-gray-400 mb-3">
               <Search size={48} className="mx-auto" />
             </div>
-            <p className="text-gray-500">No orders found matching your search.</p>
+            <p className="text-gray-500">
+              No orders found matching your search.
+            </p>
           </div>
         )}
 
@@ -339,7 +507,11 @@ export default function OrdersPage() {
                 <span className="sr-only">Previous</span>
                 &lt;
               </Button>
-              <Button variant="outline" size="sm" className="bg-green-50 text-green-700 border-green-200">
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-green-50 text-green-700 border-green-200"
+              >
                 1
               </Button>
               <Button variant="outline" size="sm">
